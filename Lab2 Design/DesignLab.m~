@@ -22,11 +22,11 @@ Total_mass = m_maylar + m_He + m_load;
 Total_mass_uncert = uncert_He + uncert_load + uncert_maylar;
 
 % Fractional Mass:
-massFract_He = m_He / Total_mass ;
-massFract_He_unct = sqrt((uncert_He/m_He)^2+ (Total_mass_uncert/Total_mass)^2) * massFract_He;
+massFract_He = Total_mass + m_He;
+massFract_He_unct = sqrt((uncert_He/m_He)^2+ (Total_mass_uncert/Total_mass)^2) * massFract_He
 
-massFract_load = m_load/Total_mass;
+massFract_load = Total_mass + m_load;
 massFract_load_unct = sqrt((uncert_load/m_load)^2+ (Total_mass_uncert/Total_mass)^2) * massFract_load;
 
-massFract_maylar = m_maylar/Total_mass;
+massFract_maylar = Total_mass + m_maylar;
 massFract_maylar_unct = sqrt((uncert_maylar/m_maylar)^2+ (Total_mass_uncert/Total_mass)^2) * massFract_maylar;
