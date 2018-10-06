@@ -18,6 +18,15 @@ function [] = modelAir(hight,err)
 %
 %
 % ---------------------------------------------------------------
+%
+% INPUTS:
+%           - Hight you are at
+%           - Error bounds you're allowed to be within
+%
+% ---------------------------------------------------------------
+% OUTPUTS:
+%           - A graph that will model for you how density, temprature, and
+%           e
 
 %Esablish a range of values.
 
@@ -37,7 +46,7 @@ title('Temperature Changes with Altitude');
 grid minor
 hold on
 ref = refline(0,hight)
-ref.Color = 'r';
+ref.Color = 'g';
 hold on
 ref = refline(0,min(h)+100)
 ref.Color = 'r';
@@ -47,7 +56,7 @@ ref.Color = 'r';
 ylim ([min(h) max(h)])
 yticks ([min(h):200:max(h)])
 xticks ([min(T):2:max(T)])
-legend('h VS T','Upper error','Hight Goal','Lower error')
+legend('h VS T','Hight required','Upper limit','Lower limit')
 hold off
 
 
@@ -60,7 +69,7 @@ grid minor
 ylim ([min(h) max(h)])
 hold on
 ref = refline(0,hight)
-ref.Color = 'r';
+ref.Color = 'g';
 hold on
 ref = refline(0,min(h)+100)
 ref.Color = 'r';
@@ -69,7 +78,7 @@ ref = refline(0,max(h)-100)
 ref.Color = 'r';
 ylim ([min(h) max(h)])
 yticks ([min(h):200:max(h)])
-legend('h VS P','Upper error','Hight Goal','Lower error')
+legend('h VS P','Hight required','Upper limit','Lower limit')
 hold off
 
 subplot(2,2,4)
@@ -82,7 +91,7 @@ grid minor
 ylim ([min(h) max(h)])
 hold on
 ref = refline(0,hight)
-ref.Color = 'r';
+ref.Color = 'g';
 hold on
 ref = refline(0,min(h)+100)
 ref.Color = 'r';
@@ -91,7 +100,7 @@ ref = refline(0,max(h)-100)
 ref.Color = 'r';
 ylim ([min(h) max(h)])
 yticks ([min(h):200:max(h)])
-legend('h VS rho','Upper error','Hight Goal','Lower error')
+legend('h VS rho','Hight required','Upper limit','Lower limit')
 hold off
 
 end
