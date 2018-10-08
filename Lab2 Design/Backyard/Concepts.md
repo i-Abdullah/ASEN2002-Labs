@@ -21,6 +21,8 @@ Thus, not also the change in volume, we must account for change in pressure a bi
 1- Emissivity : How much heat the body emits. It's also called radiation, it's given in units of W/m².
 
 - Black body emissivity (objects emissivity): For Mylar emissivity = 0.044.
+
+
 - Sun Emissivity: How much power the sun radiates can affect, on AVG earth's top surface is 1361 W/m2
 - Sun will vary with Time of the year, and orbits
 - https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=7&ved=2ahUKEwiQ55jFsPHdAhUPo4MKHY1eDU8QFjAGegQICBAC&url=https%3A%2F%2Fust.edu%2Fojs%2Findex.php%2FJST%2Farticle%2Fview%2F709%2F659&usg=AOvVaw1vdtemkQaeAf6CtOmzMbD2
