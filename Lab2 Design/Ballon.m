@@ -30,9 +30,9 @@ FractMassBallon_Uncertinity  = sqrt((MassBallon(2)/MassBallon(1))^2+ (TotalMass_
 
 %----------------- ( Volumes/Areas ) --------------------------------------------
 
-RaduisBallon = ;
-SurfAreaBallon = 4 * pi * (r)^2 ;
-VolumeBallon  = (4/3) * pi * (r)^3;
+RaduisBallon = 0.346075/2 ;
+SurfAreaBallon = 4 * pi * (RaduisBallon)^2 ;
+VolumeBallon  = (4/3) * pi * (RaduisBallon)^3;
 
 
 %% ?u = Qnet
@@ -41,44 +41,60 @@ VolumeBallon  = (4/3) * pi * (r)^3;
 
 % TEH SUNE:
 
-Q_SUN_DAY = @(time) 1370 * time * (SurfAreaBallon/2);
+AbsroptivitySun = 0.6;
+
+%Q_SUN_DAY = @(time) 1370 * time * (SurfAreaBallon/2);
 
 % Albedo
 
-Q_Albedo = @(time) 237 * time * (SurfAreaBallon/2) ;
+%Q_Albedo = @(time) 237 * time * (SurfAreaBallon/2) ;
 
 % Emissivity of Ballon
 
 EmissivityMaterial = 0.8;
 StevBoltzConst = 5.670e-8;
-Q_Emissivity = @(time,Temp) EmissivityMaterial * StevBoltzConst * SurfAreaBallon * Temp^4
+%Q_Emissivity = @(time,Temp) EmissivityMaterial * StevBoltzConst * SurfAreaBallon * Temp^4 * time
 
-% Constant Diffusuion?
+% Add up everything 
 
 
 %% Q = ?u ????? Q = Cv(T2 -T1) ????? Q/Cv + T1 = T2 ????? v = mRT2/P
 
 %------------------ ( Find Total Q ) --------------------------------------
+%
+%{
 Time = ;
 QTotal_Day = feval(Q_SUN_DAY,Time) - feval(Q_Emissivity,Time) + Q_Albedo*feval(Q_SUN_DAY,Time) ;
 QTotal_Night = - feval(Q_SUN_Night,Time) - feval(Q_Emissivity,Time) - Q_Albedo*feval(Q_SUN_Night,Time); %Not sure about albedo at night
 
 QTotat = [ QTotal_Day QTotal_Night ];
+%}
+%------------------ ( Find New T ) --------------------------------------
 
-%------------------ ( Find New Volume ) --------------------------------------
+T_New = ((( EmissivityMaterial * 237 ) + (AbsroptivitySun*1370)) / (4*EmissivityMaterial*StevBoltzConst))^(1/4)
 
+%------------------ ( Itteration ) --------------------------------------
 % Find your initial info
 
-height = 3500; %the initial hight
+RGas = 2.0769 ; %Gas constant
+height = 35000; %the initial hight
+[ TNew aNew PNew rhoNew ] = atmoscoesa(height);
+NewDensity = ( (PNew/1000) / RGas*T_New )
+h = WhatHight_roh(NewDensity);
 
-[ T a P rho ] = atmosisa(height);
+while abs(rho-NewDensity) > 1e-6
+    
+[ TNew aNew PNew rhoNew ] = atmoscoesa(h);
 
-RGas = 1; %Gas constant %CHEKKKKK!! ARE WE GOnna use funcitons at different temps?
 
-T2 = T; %Temp at the original hight we start at 35 km.
+NewDensity = ( (PNew/1000) / RGas*T_New )
+h = WhatHight_roh(NewDensity);
 
-P = 10 + P %Pressure inside our ballon taken to be 10 as gage, thus it's + Patm
-CurrentVolume = massTotal*T2*R / P ;
+end
+
+ActualHight = h;
+
+%------------------ ( Find New Volume ) --------------------------------------
 
 %% Find the Density based on Volume
 
