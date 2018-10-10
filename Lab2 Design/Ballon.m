@@ -41,16 +41,17 @@ VolumeBallon  = (4/3) * pi * (r)^3;
 
 % TEH SUNE:
 
-Q_SUN_DAY = @(time) 1370*Time * Area
-Q_SUN_Night = @(time)
+Q_SUN_DAY = @(time) 1370 * time * (SurfAreaBallon/2);
 
 % Albedo
 
-Q_Albedo = @(time) ;
+Q_Albedo = @(time) 237 * time * (SurfAreaBallon/2) ;
 
 % Emissivity of Ballon
 
-Q_Emissivity = @(time) ;
+EmissivityMaterial = 0.8;
+StevBoltzConst = 5.670e-8;
+Q_Emissivity = @(time,Temp) EmissivityMaterial * StevBoltzConst * SurfAreaBallon * Temp^4
 
 % Constant Diffusuion?
 
