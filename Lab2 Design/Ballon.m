@@ -42,13 +42,13 @@ VolumeBallon  = (4/3) * pi * (RaduisBallon)^3;
 % TEH SUNE:
 
 AbsroptivitySun = 0.6;
-qSun = 1370 % W / m^2 
+qSun = 1370; % W / m^2 
 
 %Q_SUN_DAY = @(time) 1370 * time * (SurfAreaBallon/2);
 
 % Albedo
 
-qEarth = 237 % W / m^2
+qEarth = 237; % W / m^2
 
 % Emissivity of Ballon
 
@@ -62,7 +62,7 @@ StevBoltzConst = 5.670e-8;
 
 %------------------ ( Find New T ) --------------------------------------
 
-T_New = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*EmissivityMaterial*StevBoltzConst))^(1/4)
+T_New = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
 
 %------------------ ( Itteration ) --------------------------------------
 % Find your initial info
@@ -70,16 +70,15 @@ T_New = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*Emi
 RGas = 2.0769 ; %Gas constant
 height = 35000; %the initial hight
 [ TNew aNew PNew rhoNew ] = atmoscoesa(height);
-NewDensity = ( (PNew/1000) / (RGas*T_Ne) ) )
-h = WhatHight_roh(NewDensity);
+NewDensity = ( (PNew/1000) / (RGas*T_New) );
+h = HuntHight(NewDensity,0,8000);
 
-while abs(rhoNew-NewDensity) > 1e-6
+while abs(rhoNew-NewDensity) > 1e-3
     
 [ TNew aNew PNew rhoNew ] = atmoscoesa(h);
+NewDensity = ( (PNew/1000) / (RGas*T_New) );
 
-
-NewDensity = ( (PNew/1000) / RGas*T_New )
-h = WhatHight_roh(NewDensity);
+h = HuntHight(NewDensity,0,8000);
 
 end
 
