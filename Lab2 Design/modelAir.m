@@ -1,5 +1,4 @@
 function [] = modelAir(hight,err)
-%% Intro
 % ---------------------------------------------------------------
 % October 5th, 2018
 % Done by :
@@ -26,7 +25,7 @@ function [] = modelAir(hight,err)
 % ---------------------------------------------------------------
 % OUTPUTS:
 %           - A graph that will model for you how density, temprature, and
-%           e
+%           pressure
 
 %Esablish a range of values.
 

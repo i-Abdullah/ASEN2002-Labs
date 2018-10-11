@@ -42,36 +42,27 @@ VolumeBallon  = (4/3) * pi * (RaduisBallon)^3;
 % TEH SUNE:
 
 AbsroptivitySun = 0.6;
+qSun = 1370 % W / m^2 
 
 %Q_SUN_DAY = @(time) 1370 * time * (SurfAreaBallon/2);
 
 % Albedo
 
-%Q_Albedo = @(time) 237 * time * (SurfAreaBallon/2) ;
+qEarth = 237 % W / m^2
 
 % Emissivity of Ballon
 
 EmissivityMaterial = 0.8;
 StevBoltzConst = 5.670e-8;
-%Q_Emissivity = @(time,Temp) EmissivityMaterial * StevBoltzConst * SurfAreaBallon * Temp^4 * time
 
 % Add up everything 
 
 
-%% Q = ?u ????? Q = Cv(T2 -T1) ????? Q/Cv + T1 = T2 ????? v = mRT2/P
+%% Setup Equlibirum eqaution at the new hight
 
-%------------------ ( Find Total Q ) --------------------------------------
-%
-%{
-Time = ;
-QTotal_Day = feval(Q_SUN_DAY,Time) - feval(Q_Emissivity,Time) + Q_Albedo*feval(Q_SUN_DAY,Time) ;
-QTotal_Night = - feval(Q_SUN_Night,Time) - feval(Q_Emissivity,Time) - Q_Albedo*feval(Q_SUN_Night,Time); %Not sure about albedo at night
-
-QTotat = [ QTotal_Day QTotal_Night ];
-%}
 %------------------ ( Find New T ) --------------------------------------
 
-T_New = ((( EmissivityMaterial * 237 ) + (AbsroptivitySun*1370)) / (4*EmissivityMaterial*StevBoltzConst))^(1/4)
+T_New = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*EmissivityMaterial*StevBoltzConst))^(1/4)
 
 %------------------ ( Itteration ) --------------------------------------
 % Find your initial info
@@ -79,10 +70,10 @@ T_New = ((( EmissivityMaterial * 237 ) + (AbsroptivitySun*1370)) / (4*Emissivity
 RGas = 2.0769 ; %Gas constant
 height = 35000; %the initial hight
 [ TNew aNew PNew rhoNew ] = atmoscoesa(height);
-NewDensity = ( (PNew/1000) / RGas*T_New )
+NewDensity = ( (PNew/1000) / (RGas*T_Ne) ) )
 h = WhatHight_roh(NewDensity);
 
-while abs(rho-NewDensity) > 1e-6
+while abs(rhoNew-NewDensity) > 1e-6
     
 [ TNew aNew PNew rhoNew ] = atmoscoesa(h);
 

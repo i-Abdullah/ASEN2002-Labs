@@ -1,6 +1,6 @@
-function h = WhatHight_roh(roh)
+function [h] = HuntHight(densityGiven,l,u)
 % ---------------------------------------------------------------
-% October 5th, 2018
+% October 11th, 2018
 % Done by :
 %              1- Mia Abouhamad
 %              2- Abdulla Alameri
@@ -23,31 +23,44 @@ function h = WhatHight_roh(roh)
 %
 % ---------------------------------------------------------------
 % INPUTS:
-%           - Density of your fluid (kg/m^3)
+%           - densityGiven : target density
+%           - l : Lower bound of hight that you think the density lies within
+%           - u : upper bound of hight you think the density lies within
 %
 % ---------------------------------------------------------------
 % OUTPUTS:
 %           - Hight in m.
 
-roh_air = 10;
-i = 32000;
+Interval = l:0.01:u;
 
-while abs(roh_air - roh) >= 1e-2
-    %the more you want to be accurate with hight you'll change the
-    %conditioon, however your input hight must be more accurate too!
+[ Temp Sound Press DensityValues ] = atmoscoesa(Interval) ;
+
+low = 1;
+high = length(DensityValues);
+mid = floor((low+high)/2);
+tol = 1e-5; %tolerance kg/m^3
+
+while abs(DensityValues(high) - DensityValues(low)) > tol
     
-    %Unless the density is inputted to a very high degree of accuracy
-    %relative to how many sig figs, this function need some bigger
-    %difference. 7 is arbitrary chosen but it is a good choice.
+    if DensityValues(mid) > densityGiven
+        
+        low = mid;
+        high = high;
+        mid = floor((low+high)/2);
+        
+        
+        
+    else
+        
+        high = mid;
+        low = low;
+        mid = floor((low+high)/2);
+
+    end
     
-    i = i+.01; %start by 1 meter, and keep adding a meter everytime just to get our measurments accurate enough.
-   
-    [ a b c d ] = atmoscoesa(i); %we get our data @ each hight.
-    
-    roh_air = d; %the output named c corresponds to the density of the air.
     
 end
 
-h = i; %h, our hight will be basically how many i's we have, each i represent 1 m.
+h = floor((low+high)/2)/100 ;
 
 end
