@@ -3,48 +3,24 @@ clear;
 clc;
 close all;
 
-%% Measurmnets: Each measurment would be stored in an array, the first indicie is the measurment, the second is the uncertinty.
+%% Define initial Values
 
+MassLoad = 500 %kg
+SafetyFactor = 3.5; %Safety Values
+GagePressure = 10; % 10 pascals
+MueU = 199947961.5 ; %Ultimate Tensile Strength Pa.
+RGas = 2.0769 ; %Gas constant
+StevBoltzConst = 5.670e-8; % Stevents Boltzman Constant
+DensityMylar = 1350 % kg/m^3 
 
-%---------------------- ( THE MASS ) ------------------------------------
-%masses:
-MassBallon = [ 9.80 0.005 ]; % in g
-MassGas = [ 1.9304622 0.004 ]; % in g
-MassLoad = [ 0.525 0.006 ]; % in g
+%-=-=-=-=-=-=-=-=-=-=-=( Heat transfer )=-=-=-=-=-=-=-=-=-=-=-=
 
-%total masses:
-TotalMass = MassBallon(1) + MassGas(1) + MassLoad(1) ;
-TotalMass_Uncertintiy = MassBallon(2) + MassGas(2) + MassLoad(2);
+%Small q is simply ?????
 
-% Fractional Masses:
-FractMassGas = MassGas(1) / TotalMass ;
-FractMassGas_Uncertinity = sqrt((MassGas(2)/MassGas(1))^2+ (TotalMass_Uncertintiy/TotalMass)^2) * FractMassGas;
+% TEH SUN:
 
-FractMassLoad = MassLoad(1)/TotalMass;
-FractMassLoad_Uncertinty = sqrt((MassLoad(2)/MassLoad(1))^2+ (TotalMass_Uncertintiy/TotalMass)^2) * FractMassLoad;
-
-FractMassBallon = MassBallon(1)/TotalMass;
-FractMassBallon_Uncertinity  = sqrt((MassBallon(2)/MassBallon(1))^2+ (TotalMass_Uncertintiy/TotalMass)^2) * FractMassBallon;
-
-%--------------------------------------------------------------------------
-
-%----------------- ( Volumes/Areas ) --------------------------------------------
-
-RaduisBallon = 0.346075/2 ;
-SurfAreaBallon = 4 * pi * (RaduisBallon)^2 ;
-VolumeBallon  = (4/3) * pi * (RaduisBallon)^3;
-
-
-%% ?u = Qnet
-
-%----------------------- ( Sources of Heat transfer ) ---------------------
-
-% TEH SUNE:
-
-AbsroptivitySun = 0.6;
+AbsroptivitySun = 0.6
 qSun = 1370; % W / m^2 
-
-%Q_SUN_DAY = @(time) 1370 * time * (SurfAreaBallon/2);
 
 % Albedo
 
@@ -53,42 +29,60 @@ qEarth = 237; % W / m^2
 % Emissivity of Ballon
 
 EmissivityMaterial = 0.8;
-StevBoltzConst = 5.670e-8;
-
-% Add up everything 
 
 
 %% Setup Equlibirum eqaution at the new hight
 
-%------------------ ( Find New T ) --------------------------------------
+%-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=
 
 T_New = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
 
-%------------------ ( Itteration ) --------------------------------------
-% Find your initial info
+%-=-=-=-=-=-=-=-=-=-=-=( Find raduis, and Gas Density )-=-=-=-=-=-=-=-=-=-=
 
-RGas = 2.0769 ; %Gas constant
-height = 35000; %the initial hight
-[ TNew aNew PNew rhoNew ] = atmoscoesa(height);
-NewDensity = ( (PNew/1000) / (RGas*T_New) );
-h = HuntHight(NewDensity,0,8000);
+% We will use a complex loop to first find the total new density, we will
+% find the temp inside the ballon utilizing the heat equiliburim, use the
+% new density and utilize a function we made to find the new hight, however
+% the new density will be a summation of gas density and everything else
+% density, so we will use the density of gas first to find the raduis,
+% then use it to find the volume of the material, and get its density,
+% then add them up.
 
-while abs(rhoNew-NewDensity) > 1e-3
+%Get Initial hight, estimate Pressure there, then use it to find density
+
+height = 35000;
+[ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
+
+%New Density via Ideal Gas law ( 1 / Specific Volume).
+NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New) );
+
+% Solve the force Balance equation for the raduis of ballon
+RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) )
+Raduis = RaduisCuibed^(1/3);
+
+%-=-=-=-=-=-=-=-=-=-=-=( Find Density of Ballon )=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+%NewDensity = NewDensityGas + NewDensityBallon ;
+
+h = HuntHight(NewDensity,0,80000);
+
+while abs(rhoLoop-NewDensity) > 1e-3
     
-[ TNew aNew PNew rhoNew ] = atmoscoesa(h);
-NewDensity = ( (PNew/1000) / (RGas*T_New) );
+[ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(h);
+%{
+NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New) );
+NewRaduis =  ( ( MassGas(1) / NewDensityGas ) * 3/4 * pi ) ^1/3 ;
+NewDensityBallon = TotalMass / ( 4/3 * pi * (NewRaduis)^3 ); %we're ignoring the volume of payload
+NewDensity = NewDensityGas + NewDensityBallon ;
 
-h = HuntHight(NewDensity,0,8000);
-
+h = HuntHight(NewDensity,0,80000);
+%}
 end
 
 ActualHight = h;
 
-%------------------ ( Find New Volume ) --------------------------------------
 
-%% Find the Density based on Volume
-
-%% Find the new hight
 
 
 %% Safet factor: Check if the stress will get up to the ultimat strength
