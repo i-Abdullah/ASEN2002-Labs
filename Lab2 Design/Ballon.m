@@ -35,7 +35,7 @@ EmissivityMaterial = 0.8;
 
 %% Setup Equlibirum eqaution at the day and night
 
-%-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=
+%-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 T_New_Day = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
 T_New_Night = ((qEarth*AbsroptivityEarth*1/2)/(EmissivityMaterial*StevBoltzConst))^(1/4)
@@ -63,10 +63,14 @@ NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
 % Solve the force Balance equation for the raduis of ballon
 RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
 Raduis = RaduisCuibed^(1/3);
+Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
 
 VolumeBal = (4/3)*pi*RaduisCuibed;
-massOfHelium = VolumeBal*NewDensityGas;
-volumeSeaLevel = massOfHelium*HeliumSeaLevel;
+
+DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed) + (4*pi*(Raduis^2)*Thickness))
+
+%use ideal gas!
+
 
 %-=-=-=-=-=-=-=-=-=-=-=( Find Density of Ballon )=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -74,7 +78,7 @@ volumeSeaLevel = massOfHelium*HeliumSeaLevel;
 
 %NewDensity = NewDensityGas + NewDensityBallon ;
 
-h = HuntHight(NewDensity,0,80000);
+h = HuntHight(DensityBallon,0,80000);
 
 while abs(rhoLoop-NewDensity) > 1e-3
     
