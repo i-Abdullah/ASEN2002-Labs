@@ -34,13 +34,6 @@ EmissivityMaterial = 0.8;
 
 
 
-%% Setup Equlibirum eqaution at the day and night
-
-%-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-T_New_Day = (( EmissivityMaterial * qEarth ) + (AbsroptivitySun*qSun) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
-T_New_Night = ((qEarth*AbsroptivityEarth)/(4*EmissivityMaterial*StevBoltzConst))^(1/4)
-
 
 %% 
 %-=-=-=-=-=-=-=-=-=-=-=( Find raduis, and Gas Density )-=-=-=-=-=-=-=-=-=-=
@@ -57,6 +50,7 @@ T_New_Night = ((qEarth*AbsroptivityEarth)/(4*EmissivityMaterial*StevBoltzConst))
 
 height = 35000;
 [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
+NuetDensityGas = ( ((PLoop+10)/1000) / (RGas*TLoop) );
 
 
 % initial state
@@ -69,63 +63,59 @@ RaduisCuibedinit = MassLoad / ( (4*pi/3)  * ( rhoLoop - initDensityGas - ( 3 * D
 %-=-=-=-=-=-=-=-=-=-=-=( Find Density of Ballon )=-=-=-=-=-=-=-=-=-=-=-=
 
 %New Density via Ideal Gas law ( 1 / Specific Volume).
-NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
 
 % Solve the force Balance equation for the raduis of ballon
-RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
+
+%@ 35 KM
+
+RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NuetDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
 Raduis = RaduisCuibed^(1/3);
 Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
-
-
-MassHeluim = NewDensityGas * ((4/3) * pi * (RaduisCuibed));
-MassMaterial = ( rhoLoop * ((4/3) * pi * (RaduisCuibed)) ) - MassHeluim - MassLoad ;
-
+VolumeShell = 4*pi*Thickness*(Raduis^2);
+MassMaterial = VolumeShell * DensityMylar;
+MassHeluim = NuetDensityGas * ((4/3) * pi * (RaduisCuibed));
 TotalMass = MassHeluim+MassLoad+MassMaterial;
 
-VolIdeal = ( ( MassHeluim*RGas*(T_New_Day) ) / ((10+PLoop )/1000 ))
 
-OverallDensity = TotalMass / VolIdeal ;
-
-h = HuntHight(OverallDensity,0,80000);
-
-while abs(rhoLoop-OverallDensity) > 1e-20
-    
-[ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(h);
+% VIP : VolumeGround = MassHeluim/(%dnesityongorund);
 
 
+%% Setup Equlibirum eqaution at the day and night
 
-h = HuntHight(DensityBallon,0,80000);
+%-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-end
+T_New_Day = ((( EmissivityMaterial * qEarth ) + (AbsroptivitySun*qSun)) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
 
-ActualHight = h;
+T_New_Night = ((qEarth*AbsroptivityEarth)/(4*EmissivityMaterial*StevBoltzConst))^(1/4)
 
-%use ideal gas!
-
-%% Overall Density: Night
-
-[ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
-
-%New Density via Ideal Gas law ( 1 / Specific Volume).
-NewDensityGas_Night = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
-
-% Solve the force Balance equation for the raduis of ballon
-RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas_Night - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
-Raduis = RaduisCuibed^(1/3);
-Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
-
-VolumeBal = (4/3)*pi*RaduisCuibed;
-
-DensityBallon = ( ( NewDensityGas_Night*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed) + (4*pi*(Raduis^2)*Thickness))
 
 %%
 
+height = 35000;
+ [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
 
 
+NewVolume = (MassHeluim*RGas*T_New_Day)/((PLoop+10)/1000)
+
+NewDensity = (TotalMass)/NewVolume;
+
+h = HuntHight(NewDensity,0,80000);
+
+HightDay = h;
 
 
-%% Safet factor: Check if the stress will get up to the ultimat strength
+%% Overall Density: Night
 
-k = 1; %safety factor
-Pg = 10; %Gage Pressue in kPA
+height = HightDay;
+[ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
+
+%New Density via Ideal Gas law ( 1 / Specific Volume).
+NewDensityNigh = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
+
+VolNight = ( ( MassHeluim*RGas*(T_New_Night) ) / ((10+PLoop )/1000 ))
+
+OverallDensity = TotalMass / VolNight ;
+
+h = HuntHight(OverallDensity,0,80000);
+
 
