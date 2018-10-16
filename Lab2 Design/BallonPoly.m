@@ -8,10 +8,10 @@ close all;
 MassLoad = 500; %kg
 SafetyFactor = 2; %Safety Values
 GagePressure = 10; % 10 pascals
-MueU = 200e6 ; %Ultimate Tensile Strength Pa.
+MueU = 21.3e6 ; %Ultimate Tensile Strength Pa.
 RGas = 2.0769; %Gas constant
 StevBoltzConst = 5.670e-8; % Stevents Boltzman Constant
-DensityMylar = 1390; % kg/m^3 
+DensityMylar = 962; % kg/m^3 
 HeliumSeaLevel = 0.164;
 
 %-=-=-=-=-=-=-=-=-=-=-=( Heat transfer )=-=-=-=-=-=-=-=-=-=-=-=
@@ -20,17 +20,17 @@ HeliumSeaLevel = 0.164;
 
 % TEH SUN:
 
-AbsroptivitySun = 0.6;
+AbsroptivitySun = 0.92;
 qSun = 1370; % W / m^2 
 
 % Albedo
 
 qEarth = 237; % W / m^2
-AbsroptivityEarth = 0.8;
+AbsroptivityEarth = 0.94;
 
 % Emissivity of Ballon
 
-EmissivityMaterial = 0.8;
+EmissivityMaterial = 0.94;
 
 
 
@@ -53,12 +53,6 @@ height = 35000;
 NuetDensityGas = ( ((PLoop+10)/1000) / (RGas*TLoop) );
 
 
-% initial state
-
-initDensityGas = ( ((PLoop+10)/1000) / (RGas*TLoop) );
-
-RaduisCuibedinit = MassLoad / ( (4*pi/3)  * ( rhoLoop - initDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
-
 
 %-=-=-=-=-=-=-=-=-=-=-=( Find Density of Ballon )=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -76,8 +70,8 @@ MassMaterial = VolumeShell * DensityMylar;
 MassHeluim = NuetDensityGas * ((4/3) * pi * (RaduisCuibed));
 TotalMass = MassHeluim+MassLoad+MassMaterial;
 
-
-% VIP : VolumeGround = MassHeluim/(%dnesityongorund);
+Volume35 = MassHeluim/NuetDensityGas;
+VolumeGround = MassHeluim/HeliumSeaLevel;
 
 
 %% Setup Equlibirum eqaution at the day and night
@@ -85,37 +79,43 @@ TotalMass = MassHeluim+MassLoad+MassMaterial;
 %-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 T_New_Day = ((( EmissivityMaterial * qEarth ) + (AbsroptivitySun*qSun)) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
+T_New_Night = ((qEarth*AbsroptivityEarth)/(4*EmissivityMaterial*StevBoltzConst))^(1/4);
 
-T_New_Night = ((qEarth*AbsroptivityEarth)/(4*EmissivityMaterial*StevBoltzConst))^(1/4)
 
+%% Day Calculations
 
-%%
+% Find the new overall density, by first finding the new overall volume using
+% the ideal gas law to find the volume and the pressure @ 35 km since it is
+% not going to change much.
 
+% get data @ 35 km.
 height = 35000;
- [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
+[ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
 
+% Volume for ideal Gas
+VolDay = (MassHeluim*RGas*T_New_Day)/((PLoop+10)/1000);
 
-NewVolume = (MassHeluim*RGas*T_New_Day)/((PLoop+10)/1000)
+% Density from the constant toal mass
+DensDay = (TotalMass)/VolDay;
 
-NewDensity = (TotalMass)/NewVolume;
-
-h = HuntHight(NewDensity,0,80000);
+%find the hight using a function we made.
+h = HuntHight(DensDay,0,80000);
 
 HightDay = h;
 
 
-%% Overall Density: Night
+%% Night Calculations: starting from the hight we @ during day
 
 height = HightDay;
 [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
 
-%New Density via Ideal Gas law ( 1 / Specific Volume).
-NewDensityNigh = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
+% New Volume from ideal Gas Law.
+VolNight = ( ( MassHeluim*RGas*(T_New_Night) ) / ((10+PLoop )/1000 ));
 
-VolNight = ( ( MassHeluim*RGas*(T_New_Night) ) / ((10+PLoop )/1000 ))
+DensNight = TotalMass / VolNight ;
 
-OverallDensity = TotalMass / VolNight ;
+h = HuntHight(DensNight,0,80000);
 
-h = HuntHight(OverallDensity,0,80000);
+HightNight = h;
 
-
+%% Graphing
