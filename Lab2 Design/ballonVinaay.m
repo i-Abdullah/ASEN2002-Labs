@@ -8,11 +8,11 @@ close all;
 MassLoad = 500; %kg
 SafetyFactor = 2; %Safety Values
 GagePressure = 10; % 10 pascals
-MueU = 200e6 ; %Ultimate Tensile Strength Pa.
+MueU = 21.3e6 ; %Ultimate Tensile Strength Pa.
 RGas = 2.0769; %Gas constant
 StevBoltzConst = 5.670e-8; % Stevents Boltzman Constant
-DensityMylar = 1390; % kg/m^3 
-HeliumSeaLevel = 0.164;
+DensityMylar = 962; % kg/m^3 
+HeliumSeaLevel = 0.164; %kg/m^3
 
 %-=-=-=-=-=-=-=-=-=-=-=( Heat transfer )=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -31,7 +31,6 @@ AbsroptivityEarth = 0.8;
 % Emissivity of Ballon
 
 EmissivityMaterial = 0.8;
-
 
 
 %% Setup Equlibirum eqaution at the day and night
@@ -58,17 +57,6 @@ T_New_Night = ((qEarth*AbsroptivityEarth*1/2)/(EmissivityMaterial*StevBoltzConst
 height = 35000;
 [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
 
-
-% initial state
-
-initDensityGas = ( ((PLoop+10)/1000) / (RGas*TLoop) );
-
-RaduisCuibedinit = MassLoad / ( (4*pi/3)  * ( rhoLoop - initDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
-
-MassHeluim = initDensityGas * ((4/3) * pi * (RaduisCuibedinit));
-
-MassMaterial = ( rhoLoop * ((4/3) * pi * (RaduisCuibedinit)) ) - MassHeluim - MassLoad ;
-
 %-=-=-=-=-=-=-=-=-=-=-=( Find Density of Ballon )=-=-=-=-=-=-=-=-=-=-=-=
 
 %New Density via Ideal Gas law ( 1 / Specific Volume).
@@ -78,26 +66,26 @@ NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
 RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
 Raduis = RaduisCuibed^(1/3);
 Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
+
 VolumeBal = (4/3)*pi*RaduisCuibed;
-VolIdeal = ( ( MassHeluim*RGas*(T_New_Day) ) / ((10+PLoop )*10^-3))
-%DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed))
+
+DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed) + (4*pi*(Raduis^2)*Thickness))
+
 
 h = HuntHight(DensityBallon,0,80000);
 
-while abs(rhoLoop-DensityBallon) > 1e-20
+while abs(rhoLoop-DensityBallon) > 0.001
     
 [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(h);
 
+NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
 RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
 Raduis = RaduisCuibed^(1/3);
 Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
 
 VolumeBal = (4/3)*pi*RaduisCuibed;
 
-DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed))
-
-
-h = HuntHight(DensityBallon,0,80000);
+DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed) + (4*pi*(Raduis^2)*Thickness))
 
 end
 
@@ -105,19 +93,39 @@ ActualHight = h;
 
 %use ideal gas!
 
-%% Overall Density: Night
+%% Overall Density - Vinay's changes
 
 [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(height);
 
 %New Density via Ideal Gas law ( 1 / Specific Volume).
 NewDensityGas_Night = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
-
+NewDensityGas_Day = ( ((PLoop+10)/1000) / (RGas*T_New_Day) );
 % Solve the force Balance equation for the raduis of ballon
-RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas_Night - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
-Raduis = RaduisCuibed^(1/3);
-Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
+RaduisCuibedNight = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas_Night - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
+RaduisCuibedDay = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas_Day - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
+RaduisDay = RaduisCuibedDay^(1/3);
+RaduisNight = RaduisCuibedNight^(1/3);
+ThicknessDay = ( (GagePressure*RaduisDay*SafetyFactor) / (2*MueU) );
+ThicknessNight = ( (GagePressure*RaduisNight*SafetyFactor) / (2*MueU) );
+VolumeBalDay = (4/3)*pi*RaduisCuibedDay;
+VolumeBalNight = (4/3)*pi*RaduisCuibedNight;
 
-VolumeBal = (4/3)*pi*RaduisCuibed;
+balMassDay = 4*pi*Raduis^2*ThicknessDay*DensityMylar;
+balMassNight = 4*pi*Raduis^2*ThicknessNight*DensityMylar;
+
+massOfHeDay = NewDensityGas_Day*VolumeBalDay;
+massOfHeNight = NewDensityGas_Night*VolumeBalNight;
+
+balloonVolSeaLevelDay = massOfHeDay*HeliumSeaLevel;
+balloonVolSeaLevelNight = massOfHeNight*HeliumSeaLevel;
+
+radiusSeaLevelDay = ((3/4)*(balloonVolSeaLevelDay / pi))^1/3;
+radiusSeaLevelNight = ((3/4)*(balloonVolSeaLevelNight / pi))^1/3;
+
+DiffOfMass = massOfHeNight-massOfHeDay;
+
+thicknessSeaLevelDay = balloonVolSeaLevelDay/(4*pi*radiusSeaLevelDay^2);
+thicknessSeaLevelNight = balloonVolSeaLevelDay/(4*pi*radiusSeaLevelNight^2);
 
 DensityBallon = ( ( NewDensityGas_Night*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed) + (4*pi*(Raduis^2)*Thickness))
 
@@ -131,4 +139,3 @@ DensityBallon = ( ( NewDensityGas_Night*(4/3)*pi*(RaduisCuibed) ) + ( DensityMyl
 
 k = 1; %safety factor
 Pg = 10; %Gage Pressue in kPA
-
