@@ -38,8 +38,8 @@ EmissivityMaterial = 0.8;
 
 %-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-T_New_Day = ((( EmissivityMaterial * qEarth )/2 + (AbsroptivitySun*qSun)/2) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
-T_New_Night = ((qEarth*AbsroptivityEarth*1/2)/(EmissivityMaterial*StevBoltzConst))^(1/4)
+T_New_Day = (( EmissivityMaterial * qEarth ) + (AbsroptivitySun*qSun) / (4*EmissivityMaterial*StevBoltzConst))^(1/4);
+T_New_Night = ((qEarth*AbsroptivityEarth)/(4*EmissivityMaterial*StevBoltzConst))^(1/4)
 
 
 %% 
@@ -65,9 +65,6 @@ initDensityGas = ( ((PLoop+10)/1000) / (RGas*TLoop) );
 
 RaduisCuibedinit = MassLoad / ( (4*pi/3)  * ( rhoLoop - initDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
 
-MassHeluim = initDensityGas * ((4/3) * pi * (RaduisCuibedinit));
-
-MassMaterial = ( rhoLoop * ((4/3) * pi * (RaduisCuibedinit)) ) - MassHeluim - MassLoad ;
 
 %-=-=-=-=-=-=-=-=-=-=-=( Find Density of Ballon )=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -78,23 +75,23 @@ NewDensityGas = ( ((PLoop+10)/1000) / (RGas*T_New_Night) );
 RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
 Raduis = RaduisCuibed^(1/3);
 Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
-VolumeBal = (4/3)*pi*RaduisCuibed;
-VolIdeal = ( ( MassHeluim*RGas*(T_New_Day) ) / ((10+PLoop )*10^-3))
-%DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed))
 
-h = HuntHight(DensityBallon,0,80000);
 
-while abs(rhoLoop-DensityBallon) > 1e-20
+MassHeluim = NewDensityGas * ((4/3) * pi * (RaduisCuibed));
+MassMaterial = ( rhoLoop * ((4/3) * pi * (RaduisCuibed)) ) - MassHeluim - MassLoad ;
+
+TotalMass = MassHeluim+MassLoad+MassMaterial;
+
+VolIdeal = ( ( MassHeluim*RGas*(T_New_Day) ) / ((10+PLoop )/1000 ))
+
+OverallDensity = TotalMass / VolIdeal ;
+
+h = HuntHight(OverallDensity,0,80000);
+
+while abs(rhoLoop-OverallDensity) > 1e-20
     
 [ TLoop aLoop PLoop rhoLoop ] = atmoscoesa(h);
 
-RaduisCuibed = MassLoad / ( (4*pi/3)  * ( rhoLoop - NewDensityGas - ( 3 * DensityMylar * ( (GagePressure * SafetyFactor) / (2*MueU) ) ) ) );
-Raduis = RaduisCuibed^(1/3);
-Thickness = ( (GagePressure*Raduis*SafetyFactor) / (2*MueU) );
-
-VolumeBal = (4/3)*pi*RaduisCuibed;
-
-DensityBallon = ( ( NewDensityGas*(4/3)*pi*(RaduisCuibed) ) + ( DensityMylar*4*pi*(Raduis)^2*Thickness) + (500) ) / ( ((4/3) * pi * RaduisCuibed))
 
 
 h = HuntHight(DensityBallon,0,80000);
