@@ -27,7 +27,7 @@ qEarth = 237; % W / m^2
 AbsroptivityEarth = 0.8; %unitless
 
 % Emissivity of Ballon
-EmissivityMaterial = 0.8; %unitless
+EmissivityMaterial = 0.29; %unitless
 
 %-=-=-=-=-=-=-=-=-=-=-=( Find New T )=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -100,3 +100,24 @@ h = HuntHight(DensNight,0,80000);
 HightNight = h;
 
 %% Graphing
+
+% The Following section will be for graphing.
+
+%%  
+
+
+
+%establish the day and night values in a mtrix so we can comet plot them
+
+t = 1:1:24;
+x = 1*t;
+y = [ ones(1,12)*HightDay ones(1,12)*HightNight ];
+
+box1=[1 1 2 2];
+box2=[4 4 5 5];
+boxy=[-1 1 1 -1]*max(y)*1.2;
+
+patch(box1,boxy,[0 1 0],'FaceAlpha',0.2)
+patch(box2,boxy,[1 0 0],'FaceAlpha',0.2)
+
+comet(x,y)
