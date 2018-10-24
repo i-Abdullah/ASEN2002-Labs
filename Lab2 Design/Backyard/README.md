@@ -1,1 +1,0 @@
-# this file is just all the junk/files that will be needed later at some point or some ideas and concepts.

@@ -1,3 +1,13 @@
+%% Info:
+%{
+
+This script aims to run themal analysis in a ballon made of Polyethlene
+without thermal coating to analyze if it stays within given boundaries. The
+data obtained will be used in other scripts.
+
+
+%}
+
 %% HouseKeeping:
 clearvars -except HightNightMay HightDayMay
 clc;
