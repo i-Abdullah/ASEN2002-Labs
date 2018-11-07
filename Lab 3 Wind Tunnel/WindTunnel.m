@@ -247,24 +247,48 @@ Velocity_BL_5_Pito = (( 2 * mean_air_diff_P_BL_5*RAir*mean_atm_Temp_BL_5) / ( me
 
 %% Velocity: Ventori tube
 AreaRatio = 1/9.5 ; 
-diffP_Reading = [ 0.05 ; 0.4 ; 1.5 ; 3.0 ; 4.9 ] ;
+diffP_Reading = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ] ;
+diffP_Uncertainty = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ;0.05 ];
 % convert inches of water to Pascal
 diffP_Reading = diffP_Reading .* 248.84;
+diffP_Uncertainty = diffP_Uncertainty .* 248.84;
 
+Velocity_VV_1_Vento = ((( 2 * diffP_Reading(1)*RAir*mean_atm_Temp_VV_1)) / ( mean_atm_P_VV_1* ( 1- (AreaRatio)^2))) ^(1/2) ;
+Velocity_VV_3_Vento = (( 2 * diffP_Reading(2)*RAir*mean_atm_Temp_VV_3) / ( mean_atm_P_VV_3* ( 1- (AreaRatio)^2))) ^(1/2) ;
+Velocity_VV_5_Vento = (( 2 * diffP_Reading(3)*RAir*mean_atm_Temp_VV_5) / ( mean_atm_P_VV_5* ( 1- (AreaRatio)^2))) ^(1/2) ;
+Velocity_VV_7_Vento = (( 2 * diffP_Reading(4)*RAir*mean_atm_Temp_VV_7) / ( mean_atm_P_VV_7* ( 1- (AreaRatio)^2))) ^(1/2) ;
+Velocity_VV_9_Vento = (( 2 * diffP_Reading(5)*RAir*mean_atm_Temp_VV_9) / ( mean_atm_P_VV_9* ( 1- (AreaRatio)^2))) ^(1/2) ;
+    
+%% error calculations: venturi tube
 
-Velocity_VV_1_Vento = (( 2 * diffP_Reading(1)*RAir*mean_atm_Temp_VV_1) / ( mean_atm_P_VV_1* ( 1- (AreaRatio)^2)))^1/2 ;
-Velocity_VV_3_Vento = (( 2 * diffP_Reading(2)*RAir*mean_atm_Temp_VV_3) / ( mean_atm_P_VV_3* ( 1- (AreaRatio)^2)))^1/2 ;
-Velocity_VV_5_Vento = (( 2 * diffP_Reading(3)*RAir*mean_atm_Temp_VV_5) / ( mean_atm_P_VV_5* ( 1- (AreaRatio)^2)))^1/2 ;
-Velocity_VV_7_Vento = (( 2 * diffP_Reading(4)*RAir*mean_atm_Temp_VV_7) / ( mean_atm_P_VV_7* ( 1- (AreaRatio)^2)))^1/2 ;
-Velocity_VV_9_Vento = (( 2 * diffP_Reading(5)*RAir*mean_atm_Temp_VV_9) / ( mean_atm_P_VV_9* ( 1- (AreaRatio)^2)))^1/2 ;
+% venturi tube: this's the resultant error equation
+% the instructiosn says to use 0.25 as error for temp and ignore the
+% reading uncertinity and only count the systmatic error.
+
+error_Vento_1 = (Velocity_VV_1_Vento/2) * ( sqrt ( (std_atm_P_VV_1/mean_atm_P_VV_1)^2 + ( 0.25/mean_atm_Temp_VV_1)^2 + (diffP_Uncertainty(1)/diffP_Reading(1))^2 ));
+error_Vento_3 = (Velocity_VV_3_Vento/2) * ( sqrt ( (std_atm_P_VV_3/mean_atm_P_VV_3)^2 + ( 0.25/mean_atm_Temp_VV_3)^2 + (diffP_Uncertainty(2)/diffP_Reading(2))^2 ));
+error_Vento_5 = (Velocity_VV_5_Vento/2) * ( sqrt ( (std_atm_P_VV_5/mean_atm_P_VV_5)^2 + ( 0.25/mean_atm_Temp_VV_5)^2 + (diffP_Uncertainty(3)/diffP_Reading(3))^2 ));
+error_Vento_7 = (Velocity_VV_7_Vento/2) * ( sqrt ( (std_atm_P_VV_7/mean_atm_P_VV_7)^2 + ( 0.25/mean_atm_Temp_VV_7)^2 + (diffP_Uncertainty(4)/diffP_Reading(4))^2 ));
+error_Vento_9 = (Velocity_VV_9_Vento/2) * ( sqrt ( (std_atm_P_VV_9/mean_atm_P_VV_9)^2 + ( 0.25/mean_atm_Temp_VV_9)^2 + (diffP_Uncertainty(5)/diffP_Reading(5))^2 ));
+
+%% error calculations: pitot-static tube and Boundary Layer
+
+error_pitot_1 = ( Velocity_VV_1_Pito/2 ) * ( sqrt ( (std_air_diff_P_VV_1/mean_air_diff_P_VV_1)^2 + (std_atm_Temp_VV_1/mean_atm_Temp_VV_1)^2 + (std_atm_P_VV_1/mean_atm_P_VV_1)^2 )) ;
+error_pitot_3 = ( Velocity_VV_3_Pito/2 ) * ( sqrt ( (std_air_diff_P_VV_3/mean_air_diff_P_VV_3)^2 + (std_atm_Temp_VV_3/mean_atm_Temp_VV_3)^2 + (std_atm_P_VV_3/mean_atm_P_VV_3)^2 )) ;
+error_pitot_5 = ( Velocity_VV_5_Pito/2 ) * ( sqrt ( (std_air_diff_P_VV_5/mean_air_diff_P_VV_5)^2 + (std_atm_Temp_VV_5/mean_atm_Temp_VV_5)^2 + (std_atm_P_VV_5/mean_atm_P_VV_5)^2 )) ;
+error_pitot_7 = ( Velocity_VV_7_Pito/2 ) * ( sqrt ( (std_air_diff_P_VV_7/mean_air_diff_P_VV_7)^2 + (std_atm_Temp_VV_7/mean_atm_Temp_VV_7)^2 + (std_atm_P_VV_7/mean_atm_P_VV_7)^2 )) ;
+error_pitot_9 = ( Velocity_VV_9_Pito/2 ) * ( sqrt ( (std_air_diff_P_VV_9/mean_air_diff_P_VV_9)^2 + (std_atm_Temp_VV_9/mean_atm_Temp_VV_9)^2 + (std_atm_P_VV_9/mean_atm_P_VV_9)^2 )) ;
+
+error_BL_5 = ( Velocity_BL_5_Pito/2 ) * ( sqrt ( (std_air_diff_P_VV_5/mean_air_diff_P_VV_5)^2 + (std_atm_Temp_VV_5/mean_atm_Temp_VV_5)^2 + (std_atm_P_VV_5/mean_atm_P_VV_5)^2 )) ;
 
 %% printout the results:
 
 Voltage = { '1';'3';'5';'7';'9'};
+Error_Vento = { error_Vento_1 ; error_Vento_3 ; error_Vento_5 ; error_Vento_7 ; error_Vento_9 };
 Veloc_Pitot = { Velocity_VV_1_Pito ; Velocity_VV_3_Pito ; Velocity_VV_5_Pito ; Velocity_VV_7_Pito ; Velocity_VV_9_Pito};
+Error_BL = {'';'';error_BL_5;'';''};
+Error_Pitot = { error_pitot_1 ; error_pitot_3 ; error_pitot_5 ; error_pitot_7 ; error_pitot_9 };
 Veloc_Venturi = { Velocity_VV_1_Vento ; Velocity_VV_3_Vento ; Velocity_VV_5_Vento ; Velocity_VV_7_Vento ; Velocity_VV_9_Vento};
 Veloc_BL = { 'N/A' ; 'N/A' ; Velocity_BL_5_Pito ; 'N/A' ; 'N/A' };
 
-Results = table(Voltage,Veloc_Pitot,Veloc_Venturi,Veloc_BL)
-    
-%% error calculations
+Results = table(Voltage,Veloc_Pitot,Error_Pitot,Veloc_Venturi,Error_Vento,Veloc_BL,Error_BL)
