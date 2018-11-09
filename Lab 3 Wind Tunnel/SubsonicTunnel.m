@@ -1,45 +1,32 @@
-%% info
-
-%{
-
-Thie script will extract and analyze data obtained from a wind tunnel lab,
-part of ASEN 2002: Lab 3, CU Bouldr, Fall 18.
-
-
-Done by
-
-1- Jack Soltys
-2- Abdulla Al Ameri
-3- Greer Foster
-4- Caelan Maitland
-
-
-%}
-
-
-
-%% housekeeping
-
-clear;
-clc;
-close all;
-
+function [ Results ] = SubsonicTunnel(inputfileVV,inputfileBB,ManoReadings)
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
 %% define constants/ hard code
 
-% those are constants, although 
+% those are constants that are pre-defined, use them t
 RAir = 287.0 ; % pa / m^3 k
-SigmaTemp = 0.25 ; % in k
-SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document
-SigmaDiffPressure = 6894.76 * (1/100); %from lab document
-SigmaManometer = 0.1 ; % in inch
+
+
+SigmaTemp = 0.25 ; % in k, uncertainty in temperature readings. 
+SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document, uncertainty in atm pressure readings 
+SigmaDiffPressure = 6894.76 * (1/100); %from lab document, uncertainty in Air pressure readings.
+SigmaManometer = 0.1 ; % in inch, uncertainty from the readings of the manometer that's used for venturi tube expeirment. 
 %% read the data
 
-
 %write the file names.
-
-filename_VV = 'VelocityVoltage_S011_G01.csv'; %the vleocity voltage file name
-filename_BL = 'BoundaryLayer_S011_G01.csv'; %the Boudnary layer file name
-
+filename_VV = inputfileVV; %the vleocity voltage file name
+filename_BL = inputfileBB; %the Boudnary layer file name
 
 %read
 
@@ -67,7 +54,37 @@ Eld_x_BL = data_BL(:,5); %ELD Probe x axis location in mm.
 Eld_y_BL = data_BL(:,6); %ELD Probe y axis location in mm.
 Voltage_BL = data_BL(:,7); % Voltage data were recorded at (in Volts).
 
-%% Manometer values
+%% Dynamic naming
+
+% get how many different voltages we have in each file, and where they at.
+%place holders
+
+
+[ numvolt_VV location_VV ] = unique(Voltage_VV);
+[ numvolt_BL location_BL ] = unique(Voltage_BL);
+
+%Dynamic naming
+
+% loop over the first file and make the names depend on the parsing
+% location
+
+set_of_names_VV = {};
+set_of_names_BL = {};
+
+for i = 1:length(numvolt_VV)
+    
+ set_of_names_VV{i} = [num2str(numvolt_VV(i)) '_VV' ];
+
+end
+
+
+%loop over the second file
+
+for i = 1:length(numvolt_BL)
+    
+ set_of_names_BL{i} = [num2str(numvolt_BL(i)) '_BL' ];
+
+end
 
 
 %% density values
@@ -75,12 +92,6 @@ Voltage_BL = data_BL(:,7); % Voltage data were recorded at (in Volts).
 %density for VV (Velocity Voltage and Boundary layer, each will be done in
 %a seperate loop.
 
-%get how many different voltages we have in each file, and where they at.
-%place holders
-
-
-[ numvolt_VV location_VV ] = unique(Voltage_VV);
-[ numvolt_BL location_BL ] = unique(Voltage_BL);
 
 % we will store all the matrices in a giant matrix, each row represents the density values at that
 % voltage.
@@ -139,15 +150,7 @@ for i=1:length(numvolt_BL)
 end
 
 
-%Dynamic naming
 
-set_of_names_VV = {};
-
-for i = 1:length(numvolt_VV)
-    
- set_of_names_VV{i} = [num2str(numvolt_VV(i)) '_VV' ];
- 
-end
 
 
 %% get the mean values: VV
@@ -320,3 +323,6 @@ errorbar(1.05,Velocity_VV_1_Vento,error_Vento_1);
 xlim([0 2]);
 legend('','Ptio-stat, V=1','','Venturi, V=1');
 grid minor
+
+
+end

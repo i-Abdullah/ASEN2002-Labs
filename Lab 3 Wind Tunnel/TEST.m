@@ -1,45 +1,33 @@
-%% info
-
-%{
-
-Thie script will extract and analyze data obtained from a wind tunnel lab,
-part of ASEN 2002: Lab 3, CU Bouldr, Fall 18.
-
-
-Done by
-
-1- Jack Soltys
-2- Abdulla Al Ameri
-3- Greer Foster
-4- Caelan Maitland
-
-
-%}
-
-
-
-%% housekeeping
-
-clear;
-clc;
-close all;
-
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
 %% define constants/ hard code
 
-% those are constants, although 
+% those are constants that are pre-defined, use them t
 RAir = 287.0 ; % pa / m^3 k
-SigmaTemp = 0.25 ; % in k
-SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document
-SigmaDiffPressure = 6894.76 * (1/100); %from lab document
-SigmaManometer = 0.1 ; % in inch
+
+% this can be omitted in case you want to use standard deviation values!!,
+% this will require you to un-ommit another section manyally.
+
+SigmaTemp = 0.25 ; % in k, uncertainty in temperature readings. 
+SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document, uncertainty in atm pressure readings 
+SigmaDiffPressure = 6894.76 * (1/100); %from lab document, uncertainty in Air pressure readings.
+SigmaManometer = 0.1 ; % in inch, uncertainty from the readings of the manometer that's used for venturi tube expeirment. 
 %% read the data
 
-
 %write the file names.
-
 filename_VV = 'VelocityVoltage_S011_G01.csv'; %the vleocity voltage file name
 filename_BL = 'BoundaryLayer_S011_G01.csv'; %the Boudnary layer file name
-
 
 %read
 
@@ -67,20 +55,191 @@ Eld_x_BL = data_BL(:,5); %ELD Probe x axis location in mm.
 Eld_y_BL = data_BL(:,6); %ELD Probe y axis location in mm.
 Voltage_BL = data_BL(:,7); % Voltage data were recorded at (in Volts).
 
-%% Manometer values
+%% Dynamic naming
 
+%-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+% get how many different voltages we have in each file, and where they at.
+%place holders
+
+
+[ numvolt_VV location_VV ] = unique(Voltage_VV);
+[ numvolt_BL location_BL ] = unique(Voltage_BL);
+
+numvolt_VV = num2str(numvolt_VV);
+numvolt_BL = num2str(numvolt_BL);
+% the loop will check if there's digits in the voltage in replace them with
+% underscore for the dynamic naming to work with any number.
+
+for i =1:length(numvolt_VV)
+    if contains(numvolt_VV(i),'.') ==1
+        numvolt_VV(i) = strrep(a,'.','_')
+    end
+end
+
+% repeat for BL file.
+
+for i =1:length(numvolt_BL)
+    if contains(numvolt_VV(i),'.') ==1
+        numvolt_BL(i) = strrep(a,'.','_')
+    end
+end
+
+
+%-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+%Dynamic naming
+
+%pre-define the cells that will have the values
+
+names_VV = {};
+names_BL = {};
+
+VV_atmP = {};
+BL_atmP = {};
+
+VV_Air_P_diff = {};
+BL_Air_P_diff = {};
+
+VV_Aux_P_diff = {};
+BL_Aux_P_diff = {};
+
+VV_Temp = {};
+BL_Temp = {};
+
+for i = 1:length(numvolt_VV)
+    
+    
+ names_VV{i} = [num2str(numvolt_VV(i)) '_VV' ];
+ 
+ % here the first row = mean, 2nd = std, and each column is different
+ % voltage
+ 
+ VV_atmP{(2*i)-1,1} = [ names_VV{i} '_mean_Patm'];
+ VV_atmP{(2*i),1} = [ names_VV{i} '_mean_Patm'];
+
+ VV_atmP{(2*i)-1,1} = [ names_VV{i} '_std_Patm'];
+ VV_atmP{(2*i),1} = [ names_VV{i} '_std_Patm'];
+ 
+ VV_Air_P_diff{(2*i)-1,1} = [ names_VV{i} '_std_Air_P_diff'];
+ VV_Air_P_diff{(2*i),1} = [ names_VV{i} '_std_Air_P_diff'];
+
+ 
+ VV_Aux_P_diff{(2*i)-1,1} = [ names_VV{i} '_mean_Aux_P_diff'];
+ VV_Aux_P_diff{(2*i),1} = [ names_VV{i} '_std_Aux_P_diff'];
+
+ VV_Temp{(2*i)-1,1} = [ names_VV{i} '_mean_Temp'];
+ VV_Temp{(2*i),1} = [ names_VV{i} '_std_Temp'];
+
+ 
+ if i < length(numvolt_VV)
+     %get mean values
+ VV_Air_P_diff{(2*i)-1,2} = mean(air_diff_P_VV( 1:location_VV(i+1))) ;
+ VV_Temp{(2*i)-1,2} = mean(atm_Temp_VV( 1:location_VV(i+1))) ;
+ VV_Aux_P_diff{(2*i)-1,2} = mean(Aux_diff_P_VV( 1:location_VV(i+1))) ;
+ VV_atmP{(2*i)-1,2} = mean(atm_P_VV( 1:location_VV(i+1))) ;
+    
+    % get std values
+    
+ VV_Air_P_diff{(2*i),2} = std(air_diff_P_VV( 1:location_VV(i+1))) ;
+ VV_Temp{(2*i),2} = std(atm_Temp_VV( 1:location_VV(i+1))) ;
+ VV_Aux_P_diff{(2*i),2} = std(Aux_diff_P_VV( 1:location_VV(i+1))) ;
+ VV_atmP{(2*i),2} = std(atm_P_VV( 1:location_VV(i+1))) ;
+
+
+ else %condition for the last itteration
+     
+          %get mean values
+ VV_Air_P_diff{(2*i)-1,2} = mean(air_diff_P_VV(location_VV(i):end)) ;
+ VV_Temp{(2*i)-1,2} = mean(atm_Temp_VV(location_VV(i):end)); 
+ VV_Aux_P_diff{(2*i)-1,2} = mean(Aux_diff_P_VV(location_VV(i):end)); 
+ VV_atmP{(2*i)-1,2} = mean(atm_P_VV(location_VV(i):end));
+    
+    % get std values
+    
+ VV_Air_P_diff{(2*i),2} = std(air_diff_P_VV((location_VV(i):end))); 
+ VV_Temp{(2*i),2} = std(atm_Temp_VV((location_VV(i):end)));
+ VV_Aux_P_diff{(2*i),2} = std(Aux_diff_P_VV((location_VV(i):end)));
+ VV_atmP{(2*i),2} = std(atm_P_VV((location_VV(i):end)));
+ 
+
+ end
+ 
+
+end
+ 
+
+%{
+
+for i = 1:length(numvolt_BL)
+    
+    
+ names_BL{i} = [num2str(numvolt_BL(i)) '_BL' ];
+ 
+ % here the first row = mean, 2nd = std, and each column is different
+ % voltage
+ 
+ BL_atmP{(2*i)-1,1} = [ names_BL{i} '_mean_Patm'];
+ BL_atmP{(2*i),1} = [ names_BL{i} '_mean_Patm'];
+
+ BL_atmP{(2*i)-1,1} = [ names_BL{i} '_std_Patm'];
+ BL_atmP{(2*i),1} = [ names_BL{i} '_std_Patm'];
+ 
+ BL_Air_P_diff{(2*i)-1,1} = [ names_BL{i} '_std_Air_P_diff'];
+ BL_Air_P_diff{(2*i),1} = [ names_BL{i} '_std_Air_P_diff'];
+
+ 
+ BL_Aux_P_diff{(2*i)-1,1} = [ names_BL{i} '_mean_Aux_P_diff'];
+ BL_Aux_P_diff{(2*i),1} = [ names_BL{i} '_std_Aux_P_diff'];
+
+ BL_Temp{(2*i)-1,1} = [ names_BL{i} '_mean_Temp'];
+ BL_Temp{(2*i),1} = [ names_BL{i} '_std_Temp'];
+
+ 
+ if i < length(numvolt_BL)
+     %get mean values
+ BL_Air_P_diff{(2*i)-1,2} = mean(air_diff_P_BL( 1:location_BL(i+1))) ;
+ BL_Temp{(2*i)-1,2} = mean(atm_Temp_BL( 1:location_BL(i+1))) ;
+ BL_Aux_P_diff{(2*i)-1,2} = mean(Aux_diff_P_BL( 1:location_BL(i+1))) ;
+ BL_atmP{(2*i)-1,2} = mean(atm_P_BL( 1:location_BL(i+1))) ;
+    
+    % get std values
+    
+ BL_Air_P_diff{(2*i),2} = std(air_diff_P_BL( 1:location_BL(i+1))) ;
+ BL_Temp{(2*i),2} = std(atm_Temp_BL( 1:location_BL(i+1))) ;
+ BL_Aux_P_diff{(2*i),2} = std(Aux_diff_P_BL( 1:location_BL(i+1))) ;
+ BL_atmP{(2*i),2} = std(atm_P_BL( 1:location_BL(i+1))) ;
+
+
+ else %condition for the last itteration
+     
+          %get mean values
+ BL_Air_P_diff{(2*i)-1,2} = mean(air_diff_P_BL(location_BL(i):end)) ;
+ BL_Temp{(2*i)-1,2} = mean(atm_Temp_BL(location_BL(i):end)); 
+ BL_Aux_P_diff{(2*i)-1,2} = mean(Aux_diff_P_BL(location_BL(i):end)); 
+ BL_atmP{(2*i)-1,2} = mean(atm_P_BL(location_BL(i):end));
+    
+    % get std values
+    
+ BL_Air_P_diff{(2*i),2} = std(air_diff_P_BL((location_BL(i):end))); 
+ BL_Temp{(2*i),2} = std(atm_Temp_BL((location_BL(i):end)));
+ BL_Aux_P_diff{(2*i),2} = std(Aux_diff_P_BL((location_BL(i):end)));
+ BL_atmP{(2*i),2} = std(atm_P_BL((location_BL(i):end)));
+ 
+
+ end
+ 
+
+ end
+ 
+%}
 
 %% density values
 
 %density for VV (Velocity Voltage and Boundary layer, each will be done in
 %a seperate loop.
 
-%get how many different voltages we have in each file, and where they at.
-%place holders
-
-
-[ numvolt_VV location_VV ] = unique(Voltage_VV);
-[ numvolt_BL location_BL ] = unique(Voltage_BL);
 
 % we will store all the matrices in a giant matrix, each row represents the density values at that
 % voltage.
@@ -138,110 +297,24 @@ for i=1:length(numvolt_BL)
     
 end
 
+%% get the y-probe-locations
 
-%Dynamic naming
+% the data are parsed at every 500, each one of these will be [ 2 x 12 ]
 
-set_of_names_VV = {};
+% 12 : 11 different voltages and the center is the 12th.
+% 3 : the first row is the mean value and the second is std, third is
+% velocity at that location.
 
-for i = 1:length(numvolt_VV)
-    
- set_of_names_VV{i} = [num2str(numvolt_VV(i)) '_VV' ];
- 
+
+Yprobe_loactions = zeros(3,12);
+for i = 1:12
+Yprobe_loactions(1,i) = mean(Eld_y_BL(i*500-499:i*500));
+Yprobe_loactions(2,i) = std(Eld_y_BL(i*500-499:i*500));
+Yprobe_loactions(3,i) = sqrt(( 2 * mean(Aux_diff_P_BL(i*500-499:i*500)) * RAir * mean(atm_Temp_BL(i*500-499:i*500)) ) / ( mean(atm_P_BL((i*500-499:i*500)) )));
+
 end
-
-
-%% get the mean values: VV
-
-
-% STARTING WITH VV!
-
-% mean values for atm pressure and std.
-mean_atm_P_VV_1 = mean(atm_P_VV( 1:location_VV(2)));
-mean_atm_P_VV_3 = mean(atm_P_VV(location_VV(2):location_VV(3)));
-mean_atm_P_VV_5 = mean(atm_P_VV(location_VV(3):location_VV(4)));
-mean_atm_P_VV_7 = mean(atm_P_VV(location_VV(4):location_VV(5)));
-mean_atm_P_VV_9 = mean(atm_P_VV(location_VV(5):length(atm_P_VV)));
-
-
-std_atm_P_VV_1 = std(atm_P_VV( 1:location_VV(2)));
-std_atm_P_VV_3 = std(atm_P_VV(location_VV(2):location_VV(3)));
-std_atm_P_VV_5 = std(atm_P_VV(location_VV(3):location_VV(4)));
-std_atm_P_VV_7 = std(atm_P_VV(location_VV(4):location_VV(5)));
-std_atm_P_VV_9 = std(atm_P_VV(location_VV(5):length(atm_P_VV)));
-
-% temp
-
-mean_atm_Temp_VV_1 = mean(atm_Temp_VV( 1:location_VV(2)));
-mean_atm_Temp_VV_3 = mean(atm_Temp_VV(location_VV(2):location_VV(3)));
-mean_atm_Temp_VV_5 = mean(atm_Temp_VV(location_VV(3):location_VV(4)));
-mean_atm_Temp_VV_7 = mean(atm_Temp_VV(location_VV(4):location_VV(5)));
-mean_atm_Temp_VV_9 = mean(atm_Temp_VV(location_VV(5):length(atm_Temp_VV)));
-
-std_atm_Temp_VV_1 = std(atm_Temp_VV( 1:location_VV(2)));
-std_atm_Temp_VV_3 = std(atm_Temp_VV(location_VV(2):location_VV(3)));
-std_atm_Temp_VV_5 = std(atm_Temp_VV(location_VV(3):location_VV(4)));
-std_atm_Temp_VV_7 = std(atm_Temp_VV(location_VV(4):location_VV(5)));
-std_atm_Temp_VV_9 = std(atm_Temp_VV(location_VV(5):length(atm_Temp_VV)));
-
-
-% aux diff
-
-mean_Aux_diff_P_VV_1 = mean(Aux_diff_P_VV( 1:location_VV(2)));
-mean_Aux_diff_P_VV_3 = mean(Aux_diff_P_VV(location_VV(2):location_VV(3)));
-mean_Aux_diff_P_VV_5 = mean(Aux_diff_P_VV(location_VV(3):location_VV(4)));
-mean_Aux_diff_P_VV_7 = mean(Aux_diff_P_VV(location_VV(4):location_VV(5)));
-mean_Aux_diff_P_VV_9 = mean(Aux_diff_P_VV(location_VV(5):length(Aux_diff_P_VV)));
-
-std_Aux_diff_P_VV_1 = std(Aux_diff_P_VV( 1:location_VV(2)));
-std_Aux_diff_P_VV_3 = std(Aux_diff_P_VV(location_VV(2):location_VV(3)));
-std_Aux_diff_P_VV_5 = std(Aux_diff_P_VV(location_VV(3):location_VV(4)));
-std_Aux_diff_P_VV_7 = std(Aux_diff_P_VV(location_VV(4):location_VV(5)));
-std_Aux_diff_P_VV_9 = std(Aux_diff_P_VV(location_VV(5):length(Aux_diff_P_VV)));
-
-
-% air diff
-
-mean_air_diff_P_VV_1 = mean(air_diff_P_VV( 1:location_VV(2)));
-mean_air_diff_P_VV_3 = mean(air_diff_P_VV(location_VV(2):location_VV(3)));
-mean_air_diff_P_VV_5 = mean(air_diff_P_VV(location_VV(3):location_VV(4)));
-mean_air_diff_P_VV_7 = mean(air_diff_P_VV(location_VV(4):location_VV(5)));
-mean_air_diff_P_VV_9 = mean(air_diff_P_VV(location_VV(5):length(air_diff_P_VV)));
-
-std_air_diff_P_VV_1 = std(air_diff_P_VV( 1:location_VV(2)));
-std_air_diff_P_VV_3 = std(air_diff_P_VV(location_VV(2):location_VV(3)));
-std_air_diff_P_VV_5 = std(air_diff_P_VV(location_VV(3):location_VV(4)));
-std_air_diff_P_VV_7 = std(air_diff_P_VV(location_VV(4):location_VV(5)));
-std_air_diff_P_VV_9 = std(air_diff_P_VV(location_VV(5):length(air_diff_P_VV)));
-
-
-
-%% Getting the mean values, BL
-
-% STARTING WITH BL!
-
-% mean values for atm pressure and std.
-mean_atm_P_BL_5 = mean(atm_P_BL(location_BL(1):length(atm_P_BL)));
-std_atm_P_BL_5 = std(atm_P_BL(location_BL(1):length(atm_P_BL)));
-
-% temp
-
-mean_atm_Temp_BL_5 = mean(atm_Temp_BL(location_BL(1):length(atm_Temp_BL)));
-std_atm_Temp_BL_5 = std(atm_Temp_BL(location_BL(1):length(atm_Temp_BL)));
-
-
-% aux diff
-mean_Aux_diff_P_BL_5 = mean(Aux_diff_P_BL(location_BL(1):length(Aux_diff_P_BL)));
-std_Aux_diff_P_BL_5 = std(Aux_diff_P_BL(location_BL(1):length(Aux_diff_P_BL)));
-
-
-% air diff
-
-mean_air_diff_P_BL_5 = mean(air_diff_P_BL(location_BL(1):length(air_diff_P_BL)));
-std_air_diff_P_BL_5 = std(air_diff_P_BL(location_BL(1):length(air_diff_P_BL)));
-
-
 %% Velocity: pitot-static probe
-
+%{
 % get the velocities for different voltages for Pitot-static and 5V for
 % Boundary Later 
 
@@ -320,3 +393,10 @@ errorbar(1.05,Velocity_VV_1_Vento,error_Vento_1);
 xlim([0 2]);
 legend('','Ptio-stat, V=1','','Venturi, V=1');
 grid minor
+
+%}
+
+%}
+
+%% test section
+
