@@ -1,4 +1,4 @@
-function [ VV_Files BL_Files ] = SubsonicTunnel(inputfileVV,inputfileBB)
+function [ VV_Files BL_Files ] = SubsonicTunnel(inputfileVV,inputfileBL,RAir)
 % ASEN 2002, Lab 3: Wind Tunnel, Fall 18.
 %
 %----------------------------------------------------------------
@@ -57,7 +57,7 @@ SigmaManometer = 0.1 ; % in inch, uncertainty from the readings of the manometer
 
 %write the file names.
 filename_VV = inputfileVV; %the vleocity voltage file name
-filename_BL = inputfileBB; %the Boudnary layer file name
+filename_BL = inputfileBL; %the Boudnary layer file name
 
 
 %check if file isn't csv then display error massege:
