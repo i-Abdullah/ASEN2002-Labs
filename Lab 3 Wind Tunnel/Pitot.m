@@ -95,9 +95,9 @@ Veloc(i) = double(Velocity(AirP_Diff(i),P_atm(i),T_atm(i)));
 end
 
 
-% Error analysis: using partial derivatives method.
+%% Error analysis: using partial derivatives method.
 
-%Define Partial Derivatives.
+% Define Partial Derivatives.
 
     PartialDiffP = diff(Velocity,Pdiff);
     PartialPatm = diff(Velocity,P);
@@ -107,10 +107,11 @@ end
     
 for i = 1:length(P_atm)
 
-    Error(i) = (double(PartialDiffP(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_Air_P_Diff)^2 + ((double(PartialPatm(AirP_Diff(i),P_atm(i),T_atm(i))))*sigma_P_atm)^2 + ((double(PartialT(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_T_atm))^2 ;
+    Error(i) = (double(PartialDiffP(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_Air_P_Diff(i))^2 + ((double(PartialPatm(AirP_Diff(i),P_atm(i),T_atm(i))))*sigma_P_atm(i))^2 + ((double(PartialT(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_T_atm(i)))^2 ;
 
 end
 
 Error = sqrt(Error);
+
 
 end
