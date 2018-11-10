@@ -1,4 +1,4 @@
-function [ Veloc Error ] = Venturi (P_atm, T_atm, AirP_Diff, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,Rfluid,)
+function [ Veloc Error ] = Venturi (P_atm, T_atm, AirP_Diff, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,Rfluid,AreaRatio)
 % ASEN 2002, Lab 3: Wind Tunnel
 %
 %----------------------------------------------------------------
@@ -60,6 +60,32 @@ function [ Veloc Error ] = Venturi (P_atm, T_atm, AirP_Diff, sigma_P_atm, sigma_
 % and the easier sloution to have the uncertinity calculations to flip the
 % order here rather than try to re-arrange the order of the derivatives.
 
+
+%check if the user inputted un-equal arrays, because this code is meant to
+%go and measure one data point or all a set of datas.
+
+if length(P_atm) ~= length(T_atm)
+    
+    error('It seems that You atmospheric pressure and temp arrays are not equal, they must be equal, if you meant to have one of them constant repeat the value')
+    
+end
+
+if length(P_atm) ~= length(AirP_Diff)
+    
+    error('It seems that You atmospheric pressure and pressure diffrence arrays are not equal, they must be equal, if you meant to have one of them constant repeat the value')
+    
+end
+
+if length(T_atm) ~= length(AirP_Diff)
+    
+    error('It seems that You Temp and pressure diffrence arrays are not equal, they must be equal, if you meant to have one of them constant repeat the value')
+    
+end
+
+
+%create the symbolic function
+
+
 syms Pdiff P T
 Velocity(Pdiff, P, T) = sqrt ( (2 * Pdiff * Rfluid * T) / ( (P) * (1-(AreaRatio)^2) ) ) ; 
 
@@ -69,14 +95,15 @@ Veloc = zeros(1,length(P_atm));
 Error = zeros(1,length(P_atm));
 
 %loop to find Velocity
+
 for i = 1:length(P_atm)
-Veloc(i) = double(Velocity(AirP_Diff,P_atm,T_atm));
+Veloc(i) = double(Velocity(AirP_Diff(i),P_atm(i),T_atm(i)));
 end
 
 
-% Error analysis: using partial derivatives method.
+%% Error analysis: using partial derivatives method.
 
-%Define Partial Derivatives.
+% Define Partial Derivatives.
 
     PartialDiffP = diff(Velocity,Pdiff);
     PartialPatm = diff(Velocity,P);
@@ -86,10 +113,12 @@ end
     
 for i = 1:length(P_atm)
 
-    Error(i) = (double(PartialDiffP(AirP_Diff,P_atm,T_atm))*sigma_Air_P_Diff)^2 + ((double(PartialPatm(AirP_Diff,P_atm,T_atm)))*sigma_P_atm)^2 + ((double(PartialT(AirP_Diff,P_atm,T_atm))*sigma_T_atm))^2 ;
+    Error(i) = (double(PartialDiffP(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_Air_P_Diff)^2 + ((double(PartialPatm(AirP_Diff(i),P_atm(i),T_atm(i))))*sigma_P_atm)^2 + ((double(PartialT(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_T_atm))^2 ;
 
 end
 
 Error = sqrt(Error);
+
+
 
 end
