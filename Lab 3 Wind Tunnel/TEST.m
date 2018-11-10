@@ -1,16 +1,4 @@
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
-%
+
 %% define constants/ hard code
 
 % those are constants that are pre-defined, use them t
@@ -28,6 +16,18 @@ SigmaManometer = 0.1 ; % in inch, uncertainty from the readings of the manometer
 %write the file names.
 filename_VV = 'VelocityVoltage_S011_G01.csv'; %the vleocity voltage file name
 filename_BL = 'BoundaryLayer_S011_G01.csv'; %the Boudnary layer file name
+
+
+%check if file isn't csv then display error massege:
+
+[ path1 name1 exten1 ] = fileparts(filename_VV) ;
+[ path2 name2 exten2 ] = fileparts(filename_BL) ;
+
+if strcmp(exten1, '.csv') == 0 || strcmp(exten2, '.csv') == 0
+    
+    error('At least on of your files are not csv files, please check them!');
+    
+end
 
 %read
 
@@ -62,12 +62,12 @@ Voltage_BL = data_BL(:,7); % Voltage data were recorded at (in Volts).
 % get how many different voltages we have in each file, and where they at.
 %place holders
 
-
 [ numvolt_VV location_VV ] = unique(Voltage_VV);
 [ numvolt_BL location_BL ] = unique(Voltage_BL);
 
 numvolt_VV = num2str(numvolt_VV);
 numvolt_BL = num2str(numvolt_BL);
+
 % the loop will check if there's digits in the voltage in replace them with
 % underscore for the dynamic naming to work with any number.
 
@@ -108,6 +108,8 @@ BL_Aux_P_diff = {};
 VV_Temp = {};
 BL_Temp = {};
 
+%the following loop is for Voltage Velocity file, and it'll get the mean
+%values and STD at each voltage and name it accordingly. 
 for i = 1:length(numvolt_VV)
     
     
@@ -117,12 +119,9 @@ for i = 1:length(numvolt_VV)
  % voltage
  
  VV_atmP{(2*i)-1,1} = [ names_VV{i} '_mean_Patm'];
- VV_atmP{(2*i),1} = [ names_VV{i} '_mean_Patm'];
-
- VV_atmP{(2*i)-1,1} = [ names_VV{i} '_std_Patm'];
  VV_atmP{(2*i),1} = [ names_VV{i} '_std_Patm'];
  
- VV_Air_P_diff{(2*i)-1,1} = [ names_VV{i} '_std_Air_P_diff'];
+ VV_Air_P_diff{(2*i)-1,1} = [ names_VV{i} '_mean_Air_P_diff'];
  VV_Air_P_diff{(2*i),1} = [ names_VV{i} '_std_Air_P_diff'];
 
  
@@ -135,17 +134,18 @@ for i = 1:length(numvolt_VV)
  
  if i < length(numvolt_VV)
      %get mean values
- VV_Air_P_diff{(2*i)-1,2} = mean(air_diff_P_VV( 1:location_VV(i+1))) ;
- VV_Temp{(2*i)-1,2} = mean(atm_Temp_VV( 1:location_VV(i+1))) ;
- VV_Aux_P_diff{(2*i)-1,2} = mean(Aux_diff_P_VV( 1:location_VV(i+1))) ;
- VV_atmP{(2*i)-1,2} = mean(atm_P_VV( 1:location_VV(i+1))) ;
+     
+ VV_Air_P_diff{(2*i)-1,2} = mean(air_diff_P_VV(location_VV(i):location_VV(i+1)-1)) ;
+ VV_Temp{(2*i)-1,2} = mean(atm_Temp_VV( location_VV(i):location_VV(i+1)-1)) ;
+ VV_Aux_P_diff{(2*i)-1,2} = mean(Aux_diff_P_VV( location_VV(i):location_VV(i+1)-1)) ;
+ VV_atmP{(2*i)-1,2} = mean(atm_P_VV( location_VV(i):location_VV(i+1)-1)) ;
     
     % get std values
     
- VV_Air_P_diff{(2*i),2} = std(air_diff_P_VV( 1:location_VV(i+1))) ;
- VV_Temp{(2*i),2} = std(atm_Temp_VV( 1:location_VV(i+1))) ;
- VV_Aux_P_diff{(2*i),2} = std(Aux_diff_P_VV( 1:location_VV(i+1))) ;
- VV_atmP{(2*i),2} = std(atm_P_VV( 1:location_VV(i+1))) ;
+ VV_Air_P_diff{(2*i),2} = std(air_diff_P_VV(location_VV(i):location_VV(i+1)-1)) ;
+ VV_Temp{(2*i),2} = std(atm_Temp_VV( location_VV(i):location_VV(i+1)-1)) ;
+ VV_Aux_P_diff{(2*i),2} = std(Aux_diff_P_VV( location_VV(i):location_VV(i+1)-1)) ;
+ VV_atmP{(2*i),2} = std(atm_P_VV( location_VV(i):location_VV(i+1)-1)) ;
 
 
  else %condition for the last itteration
@@ -237,15 +237,15 @@ for i = 1:length(numvolt_BL)
 
 %% density values
 
-%density for VV (Velocity Voltage and Boundary layer, each will be done in
+%density for VV and BL (Velocity Voltage and Boundary layer, each will be done in
 %a seperate loop.
 
 
 % we will store all the matrices in a giant matrix, each row represents the density values at that
 % voltage.
 
-Density_VV = zeros(length(Voltage_VV),1);
-Density_BL = zeros(length(Voltage_BL),1);
+VV_Density = zeros(length(Voltage_VV),1);
+BL_Density = zeros(length(Voltage_BL),1);
 
 
 % we will run a loop to compute the densities and place them
@@ -260,14 +260,14 @@ for i=1:length(numvolt_VV)
     if i==length(numvolt_VV)
         
         for j = location_VV(i):length(Voltage_VV)
-        Density_VV(j) = atm_P_VV(j)/( atm_Temp_VV(j) * RAir) ;
+        VV_Density(j) = atm_P_VV(j)/( atm_Temp_VV(j) * RAir) ;
         end
         
     else
         
     for j = location_VV(i):location_VV(i+1)
         
-        Density_VV(j) = atm_P_VV(j)/( atm_Temp_VV(j) * RAir) ;
+        VV_Density(j) = atm_P_VV(j)/( atm_Temp_VV(j) * RAir) ;
     end
     
     end
@@ -283,120 +283,70 @@ for i=1:length(numvolt_BL)
     if i==length(numvolt_BL)
         
         for j = location_BL(i):length(Voltage_BL)
-        Density_BL(j) = atm_P_BL(j)/( atm_Temp_BL(j) * RAir) ;
+        BL_Density(j) = atm_P_BL(j)/( atm_Temp_BL(j) * RAir) ;
         end
         
     else
         
     for j = location_BL(i):location_BL(i+1)
         
-        Density_BL(j) = atm_P_BL(j)/( atm_Temp_BL(j) * RAir) ;
+        BL_Density(j) = atm_P_BL(j)/( atm_Temp_BL(j) * RAir) ;
     end
     
     end
     
 end
 
-%% get the y-probe-locations
 
-% the data are parsed at every 500, each one of these will be [ 2 x 12 ]
+%% get the BL information
 
-% 12 : 11 different voltages and the center is the 12th.
+% the data are parsed at every 500, each one of these will be [ 3 x 12 ]
+
+% 12 : 12 different voltages and the center is the 12th.
+
 % 3 : the first row is the mean value and the second is std, third is
 % velocity at that location.
 
 
-Yprobe_loactions = zeros(3,12);
+BL_YprobeLocation = {}; %location of the y-probe, note that the last on is free-stream condition
+BL_SigmaYprobeLocation = {}; %uncertainty in that location via std note that the last on is free-stream condition
+BL_Velocity = {} ; %Velocity at each y-probe location, and note that the last on is free-stream condition
+
 for i = 1:12
-Yprobe_loactions(1,i) = mean(Eld_y_BL(i*500-499:i*500));
-Yprobe_loactions(2,i) = std(Eld_y_BL(i*500-499:i*500));
-Yprobe_loactions(3,i) = sqrt(( 2 * mean(Aux_diff_P_BL(i*500-499:i*500)) * RAir * mean(atm_Temp_BL(i*500-499:i*500)) ) / ( mean(atm_P_BL((i*500-499:i*500)) )));
+    
+BL_YprobeLocation{i,1} = mean(Eld_y_BL(i*500-499:i*500));
+BL_SigmaYprobeLocation{i,1} = std(Eld_y_BL(i*500-499:i*500));
+BL_Velocity{i,1} = sqrt(( 2 * mean(Aux_diff_P_BL(i*500-499:i*500)) * RAir * mean(atm_Temp_BL(i*500-499:i*500)) ) / ( mean(atm_P_BL((i*500-499:i*500)) )));
 
 end
-%% Velocity: pitot-static probe
-%{
-% get the velocities for different voltages for Pitot-static and 5V for
-% Boundary Later 
 
-Velocity_VV_1_Pito = (( 2 * mean_air_diff_P_VV_1*RAir*mean_atm_Temp_VV_1) / ( mean_atm_P_VV_1))^(1/2);
-Velocity_VV_3_Pito = (( 2 * mean_air_diff_P_VV_3*RAir*mean_atm_Temp_VV_3) / (( mean_atm_P_VV_3)))^(1/2) ;
-Velocity_VV_5_Pito = (( 2 * mean_air_diff_P_VV_5*RAir*mean_atm_Temp_VV_5) / ( mean_atm_P_VV_5))^(1/2) ;
-Velocity_VV_7_Pito = (( 2 * mean_air_diff_P_VV_7*RAir*mean_atm_Temp_VV_7) / ( mean_atm_P_VV_7))^(1/2 );
-Velocity_VV_9_Pito = (( 2 * mean_air_diff_P_VV_9*RAir*mean_atm_Temp_VV_9) / ( mean_atm_P_VV_9))^(1/2 );
 
-Velocity_BL_5_Pito = (( 2 * mean_air_diff_P_BL_5*RAir*mean_atm_Temp_BL_5) / ( mean_atm_P_BL_5))^(1/2) ;
+%% store VV values
 
-%% Velocity: Ventori tube
-AreaRatio = 1/9.5 ; 
-diffP_Reading = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ] ;
-diffP_Uncertainty = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ;0.05 ];
-% convert inches of water to Pascal
-diffP_Reading = diffP_Reading .* 248.84;
-diffP_Uncertainty = diffP_Uncertainty .* 248.84;
+VV_Files = {};
 
-%get the velocity readings
-Velocity_VV_1_Vento = ((( 2 * diffP_Reading(1)*RAir*mean_atm_Temp_VV_1)) / ( mean_atm_P_VV_1* ( 1- (AreaRatio)^2))) ^(1/2) ;
-Velocity_VV_3_Vento = (( 2 * diffP_Reading(2)*RAir*mean_atm_Temp_VV_3) / ( mean_atm_P_VV_3* ( 1- (AreaRatio)^2))) ^(1/2) ;
-Velocity_VV_5_Vento = (( 2 * diffP_Reading(3)*RAir*mean_atm_Temp_VV_5) / ( mean_atm_P_VV_5* ( 1- (AreaRatio)^2))) ^(1/2) ;
-Velocity_VV_7_Vento = (( 2 * diffP_Reading(4)*RAir*mean_atm_Temp_VV_7) / ( mean_atm_P_VV_7* ( 1- (AreaRatio)^2))) ^(1/2) ;
-Velocity_VV_9_Vento = (( 2 * diffP_Reading(5)*RAir*mean_atm_Temp_VV_9) / ( mean_atm_P_VV_9* ( 1- (AreaRatio)^2))) ^(1/2) ;
-    
-%% error calculations: venturi tube
+VV_Files{1,1} = { 'VV_atmP' };
+VV_Files{2,1} = { 'VV_Air_P_diff' };
+VV_Files{3,1} = { 'VV_Aux_P_diff' };
+VV_Files{4,1} = { 'VV_Temp' };
+VV_Files{5,1} = { 'VV_Density' };
+VV_Files{6,1} = { 'Voltages' };
 
-% venturi tube: this's the resultant error equation
-% the instructiosn says to use 0.25 as error for temp and ignore the
-% reading uncertinity and only count the systmatic error.
+VV_Files{1,2} = { VV_atmP };
+VV_Files{2,2} = { VV_Air_P_diff };
+VV_Files{3,2} = { VV_Aux_P_diff };
+VV_Files{4,2} = { VV_Temp };
+VV_Files{5,2} = { VV_Density };
+VV_Files{6,2} = { cellstr(numvolt_VV) };
 
-error_Vento_1 = (Velocity_VV_1_Vento/2) * ( sqrt ( (SigmaatmPressure/mean_atm_P_VV_1)^2 + ( SigmaTemp/mean_atm_Temp_VV_1)^2 + (SigmaManometer/diffP_Reading(1))^2 ));
-error_Vento_3 = (Velocity_VV_3_Vento/2) * ( sqrt ( (SigmaatmPressure/mean_atm_P_VV_3)^2 + ( SigmaTemp/mean_atm_Temp_VV_3)^2 + (SigmaManometer/diffP_Reading(2))^2 ));
-error_Vento_5 = (Velocity_VV_5_Vento/2) * ( sqrt ( (SigmaatmPressure/mean_atm_P_VV_5)^2 + ( SigmaTemp/mean_atm_Temp_VV_5)^2 + (SigmaManometer/diffP_Reading(3))^2 ));
-error_Vento_7 = (Velocity_VV_7_Vento/2) * ( sqrt ( (SigmaatmPressure/mean_atm_P_VV_7)^2 + ( SigmaTemp/mean_atm_Temp_VV_7)^2 + (SigmaManometer/diffP_Reading(4))^2 ));
-error_Vento_9 = (Velocity_VV_9_Vento/2) * ( sqrt ( (SigmaatmPressure/mean_atm_P_VV_9)^2 + ( SigmaTemp/mean_atm_Temp_VV_9)^2 + (SigmaManometer/diffP_Reading(5))^2 ));
+%% store BL values
 
-%% error calculations: pitot-static tube and Boundary Layer
+BL_Files = {};
 
-% error should decrease 
-% error in pitot static tube and Boundary Layer since same equation was
-% used to 
-error_pitot_1 = ( Velocity_VV_1_Pito/2 ) * ( sqrt ( (SigmaDiffPressure/mean_air_diff_P_VV_1)^2 + (SigmaTemp/mean_atm_Temp_VV_1)^2 + (SigmaatmPressure/mean_atm_P_VV_1)^2 )) ;
-error_pitot_3 = ( Velocity_VV_3_Pito/2 ) * ( sqrt ( (SigmaDiffPressure/mean_air_diff_P_VV_3)^2 + (SigmaTemp/mean_atm_Temp_VV_3)^2 + (SigmaatmPressure/mean_atm_P_VV_3)^2 )) ;
-error_pitot_5 = ( Velocity_VV_5_Pito/2 ) * ( sqrt ( (SigmaDiffPressure/mean_air_diff_P_VV_5)^2 + (SigmaTemp/mean_atm_Temp_VV_5)^2 + (SigmaatmPressure/mean_atm_P_VV_5)^2 )) ;
-error_pitot_7 = ( Velocity_VV_7_Pito/2 ) * ( sqrt ( (SigmaDiffPressure/mean_air_diff_P_VV_7)^2 + (SigmaTemp/mean_atm_Temp_VV_7)^2 + (SigmaatmPressure/mean_atm_P_VV_7)^2 )) ;
-error_pitot_9 = ( Velocity_VV_9_Pito/2 ) * ( sqrt ( (SigmaDiffPressure/mean_air_diff_P_VV_9)^2 + (SigmaTemp/mean_atm_Temp_VV_9)^2 + (SigmaatmPressure/mean_atm_P_VV_9)^2 )) ;
+BL_Files{1,1} = { 'BL_YprobeLocation' };
+BL_Files{2,1} = { 'BL_SigmaYprobeLocation' };
+BL_Files{3,1} = { 'BL_Velocity' };
 
-error_BL_5 = ( Velocity_BL_5_Pito/2 ) * ( sqrt ( (SigmaDiffPressure/mean_air_diff_P_VV_5)^2 + (SigmaTemp/mean_atm_Temp_VV_5)^2 + (SigmaatmPressure/mean_atm_P_VV_5)^2 )) ;
-
-%% printout the results:
-
-Voltage = { '1';'3';'5';'7';'9'};
-Error_Vento = { error_Vento_1 ; error_Vento_3 ; error_Vento_5 ; error_Vento_7 ; error_Vento_9 };
-Veloc_Pitot = { Velocity_VV_1_Pito ; Velocity_VV_3_Pito ; Velocity_VV_5_Pito ; Velocity_VV_7_Pito ; Velocity_VV_9_Pito};
-Error_BL = {'N/A';'N/A';error_BL_5;'N/A';'N/A'};
-Error_Pitot = { error_pitot_1 ; error_pitot_3 ; error_pitot_5 ; error_pitot_7 ; error_pitot_9 };
-Veloc_Venturi = { Velocity_VV_1_Vento ; Velocity_VV_3_Vento ; Velocity_VV_5_Vento ; Velocity_VV_7_Vento ; Velocity_VV_9_Vento};
-Veloc_BL = { 'N/A' ; 'N/A' ; Velocity_BL_5_Pito ; 'N/A' ; 'N/A' };
-
-Results = table(Voltage,Veloc_Pitot,Error_Pitot,Veloc_Venturi,Error_Vento,Veloc_BL,Error_BL)
-
-%% Boundary Layer:
-
-%% Plots
-
-figure(1);
-plot(1,Velocity_VV_1_Pito,'*')
-hold on
-errorbar(1,Velocity_VV_1_Pito,error_pitot_1);
-hold on
-plot(1.05,Velocity_VV_1_Vento,'*')
-hold on
-errorbar(1.05,Velocity_VV_1_Vento,error_Vento_1);
-xlim([0 2]);
-legend('','Ptio-stat, V=1','','Venturi, V=1');
-grid minor
-
-%}
-
-%}
-
-%% test section
-
+BL_Files{1,2} = { BL_YprobeLocation };
+BL_Files{2,2} = { BL_SigmaYprobeLocation };
+BL_Files{3,2} = { BL_Velocity };

@@ -12,7 +12,7 @@ function [ Veloc Error ] = Venturi (P_atm, T_atm, AirP_Diff, sigma_P_atm, sigma_
 %----------------------------------------------------------------
 %
 % This function will utilize the airspeed equation using Bernoulli's equations
-% and pito-static tube and ideal gas, the function will output the velocity and
+% and Venturi tube and ideal gas, the function will output the velocity and
 % uncertinity calculations. It is making the assumption that the universal gas constant
 % that comes from the ideal gas law is treated to be exact.
 %
@@ -40,6 +40,9 @@ function [ Veloc Error ] = Venturi (P_atm, T_atm, AirP_Diff, sigma_P_atm, sigma_
 %           Rfluid : Universal constant of the fluid as gas, it must be in
 %           (Pascal)(Pa), or equivelent english unit.
 %
+%           AreaRatio : A2/A1 (Area of test / Area of the inital location)
+%
+%
 % ----------------------- OUTPUT --------------------------------
 %
 %           Veloc : Velocity as matrix, in m/s or equivelent english units
@@ -58,7 +61,7 @@ function [ Veloc Error ] = Venturi (P_atm, T_atm, AirP_Diff, sigma_P_atm, sigma_
 % order here rather than try to re-arrange the order of the derivatives.
 
 syms Pdiff P T
-Velocity(Pdiff, P, T) = sqrt ( (2 * Pdiff * Rfluid * T) / (P) ) ; 
+Velocity(Pdiff, P, T) = sqrt ( (2 * Pdiff * Rfluid * T) / ( (P) * (1-(AreaRatio)^2) ) ) ; 
 
 %pre-define this matrix in case there's more than one Pressure or Temp
 %measurments. 
