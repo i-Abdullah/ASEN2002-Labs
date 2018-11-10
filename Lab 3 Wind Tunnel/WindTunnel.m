@@ -26,7 +26,9 @@ close all;
 
 %% define constants/ hard code
 
-% those are constants, although 
+% those are constants, change them here.
+
+
 RAir = 287.0 ; % pa / m^3 k
 SigmaTemp = 0.25 ; % in k
 SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document
@@ -140,6 +142,8 @@ sigma_Manometer = ones(1,length(Patm_MeanValues_VV)) * SigmaManometer;
 
 [ Velc_Venturi Error_Venturi ] = Venturi (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,RAir,AreaRatio)
 [ Velc_Pitot Error_Pitot ] = Pitot (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Manometer,RAir)
+
+
 %% printout the results:
 %{
 Voltage = VV_Files{6,2}{:,1};
