@@ -39,11 +39,15 @@ AreaRatio = 1/9.5 ;
 
 %manometer readings
 
-ManoReadings = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ];
-ManoUncert = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ; 0.05 ];
+%248 to convert to Pascal from inches of water.
+
+ManoReadings = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ] .* 248;
+ManoUncert = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ; 0.05 ] .* 248 ;
 
 % input files
 
+SectionNum = 11;
+GroupNum = 01;
 inputfileVV = 'VelocityVoltage_S011_G01.csv';
 inputfileBL = 'BoundaryLayer_S011_G01.csv';
 
@@ -140,36 +144,38 @@ sigma_Manometer = ones(1,length(Patm_MeanValues_VV)) * SigmaManometer;
 %% calculate Velocity
 
 
-[ Velc_Venturi Error_Venturi ] = Venturi (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,RAir,AreaRatio)
-[ Velc_Pitot Error_Pitot ] = Pitot (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Manometer,RAir)
+[ Velc_Venturi Error_Venturi ] = Venturi (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,RAir,AreaRatio);
+[ Velc_Pitot Error_Pitot ] = Pitot (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Manometer,RAir);
 
+
+%% Boundary Layer thickness
+
+% make a fit, plug the 95% free stream velocity value, and get the BL
+% Thickness
+
+Title = [ 'Velocity vs Y-probe profile for Group: ' num2str(GroupNum) ' Section ' num2str(SectionNum) ] ;
+
+VelocAtBL = Velocity_BL_values(12)*0.95;
+[ Function ErrorStruct ] = createFit(Velocity_BL_values, Ylocation_BL_values,Title);
+hold on
+plot(VelocAtBL, feval(Function,VelocAtBL), '*')
+hold on
+refline(0,feval(Function,VelocAtBL));
+legend( 'Data points', 'Excluded Local V_\infty', 'Best Fit Line','95% Of Local V_\infty ', 'Corresponding BL thickness','Location', 'NorthWest' );
+hold off
+
+BLThickness = feval(Function,VelocAtBL)
+RisdualSum = getfield(ErrorStruct,'sse'); % Risdual sum
+ErrorInBLThickness = sqrt(1/9) * RisdualSum  % sqrt of 1/N-2
 
 %% printout the results:
-%{
-Voltage = VV_Files{6,2}{:,1};
-Error_Vento = { error_Vento_1 ; error_Vento_3 ; error_Vento_5 ; error_Vento_7 ; error_Vento_9 };
-Veloc_Pitot = { Velocity_VV_1_Pito ; Velocity_VV_3_Pito ; Velocity_VV_5_Pito ; Velocity_VV_7_Pito ; Velocity_VV_9_Pito};
-Error_BL = {'N/A';'N/A';error_BL_5;'N/A';'N/A'};
-Error_Pitot = { error_pitot_1 ; error_pitot_3 ; error_pitot_5 ; error_pitot_7 ; error_pitot_9 };
-Veloc_Venturi = { Velocity_VV_1_Vento ; Velocity_VV_3_Vento ; Velocity_VV_5_Vento ; Velocity_VV_7_Vento ; Velocity_VV_9_Vento};
-Veloc_BL = { 'N/A' ; 'N/A' ; Velocity_BL_5_Pito ; 'N/A' ; 'N/A' };
 
-Results = table(Voltage,Veloc_Pitot,Error_Pitot,Veloc_Venturi,Error_Vento,Veloc_BL,Error_BL)
+Voltage = VV_Files{6,2}{:,1};
+Error_Vento = { Error_Venturi(1) ; Error_Venturi(2) ; Error_Venturi(3) ; Error_Venturi(4) ; Error_Venturi(5) };
+Veloc_Pitot = { Velc_Pitot(1) ; Velc_Pitot(2) ; Velc_Pitot(3) ; Velc_Pitot(4) ; Velc_Pitot(5) };
+Error_Pitot = { Error_Pitot(1) ; Error_Pitot(2) ; Error_Pitot(3) ; Error_Pitot(4) ; Error_Pitot(5) };
+Veloc_Venturi = { Velc_Venturi(1) ; Velc_Venturi(2) ; Velc_Venturi(3) ; Velc_Venturi(4) ; Velc_Venturi(5) };
+
+Results = table(Voltage,Veloc_Pitot,Error_Pitot,Veloc_Venturi,Error_Vento)
 
 %% Boundary Layer:
-
-%% Plots
-
-figure(1);
-plot(1,Velocity_VV_1_Pito,'*')
-hold on
-errorbar(1,Velocity_VV_1_Pito,error_pitot_1);
-hold on
-plot(1.05,Velocity_VV_1_Vento,'*')
-hold on
-errorbar(1.05,Velocity_VV_1_Vento,error_Vento_1);
-xlim([0 2]);
-legend('','Ptio-stat, V=1','','Venturi, V=1');
-grid minor
-
-%}
