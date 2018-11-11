@@ -42,14 +42,21 @@ AreaRatio = 1/9.5 ;
 %248 to convert to Pascal from inches of water.
 
 ManoReadings = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ] .* 248;
-ManoUncert = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ; 0.05 ] .* 248 ;
+ManoReadings = [ 0.01 ; 0.25 ; 1.15 ; 2.54 ; 4.4 ] .* 248;
 
+ManoUncert = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ; 0.05 ] .* 248 ;
 % input files
 
 SectionNum = 11;
-GroupNum = 01;
-inputfileVV = 'VelocityVoltage_S011_G01.csv';
-inputfileBL = 'BoundaryLayer_S011_G01.csv';
+GroupNum = 1;
+
+inputfileVV = ['VelocityVoltage_S0' num2str(SectionNum) '_G0' num2str(GroupNum) '.csv' ]
+inputfileBL = ['BoundaryLayer_S0' num2str(SectionNum) '_G0' num2str(GroupNum) '.csv' ]
+
+
+% title of the BL plot.
+Title = [ 'Velocity vs Y-probe profile for Group: ' num2str(GroupNum) ' Section ' num2str(SectionNum) ] ;
+
 
 %% read the files/ call the reading fucntion : VV
 
@@ -153,7 +160,6 @@ sigma_Manometer = ones(1,length(Patm_MeanValues_VV)) * SigmaManometer;
 % make a fit, plug the 95% free stream velocity value, and get the BL
 % Thickness
 
-Title = [ 'Velocity vs Y-probe profile for Group: ' num2str(GroupNum) ' Section ' num2str(SectionNum) ] ;
 
 VelocAtBL = Velocity_BL_values(12)*0.95;
 [ Function ErrorStruct ] = createFit(Velocity_BL_values, Ylocation_BL_values,Title);
