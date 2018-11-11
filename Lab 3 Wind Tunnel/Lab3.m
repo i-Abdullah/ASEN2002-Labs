@@ -1,3 +1,4 @@
+function [ Results, BLThickness, ErrorInBLThickness ] = Lab3(SectionNum,GroupNum)
 %% info
 
 %{
@@ -17,13 +18,6 @@ Done by
 %}
 
 
-
-%% housekeeping
-
-clear;
-clc;
-close all;
-
 %% define constants/ hard code
 
 % those are constants, change them here.
@@ -42,20 +36,23 @@ AreaRatio = 1/9.5 ;
 %248 to convert to Pascal from inches of water.
 
 ManoReadings = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ] .* 248;
-ManoReadings = [ 0.01 ; 0.25 ; 1.15 ; 2.54 ; 4.4 ] .* 248;
+%ManoReadings = [ 0.01 ; 0.25 ; 1.15 ; 2.54 ; 4.4 ] .* 248;
 
 ManoUncert = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ; 0.05 ] .* 248 ;
+
 % input files
 
-SectionNum = 11;
-GroupNum = 1;
-
-inputfileVV = ['VelocityVoltage_S0' num2str(SectionNum) '_G0' num2str(GroupNum) '.csv' ]
-inputfileBL = ['BoundaryLayer_S0' num2str(SectionNum) '_G0' num2str(GroupNum) '.csv' ]
+if GroupNum <= 9
+    inputfileVV = ['VelocityVoltage_S0' num2str(SectionNum) '_G0' num2str(GroupNum) '.csv' ];
+    inputfileBL = ['BoundaryLayer_S0' num2str(SectionNum) '_G0' num2str(GroupNum) '.csv' ];
+else
+    inputfileVV = ['VelocityVoltage_S0' num2str(SectionNum) '_G' num2str(GroupNum) '.csv' ];
+    inputfileBL = ['BoundaryLayer_S0' num2str(SectionNum) '_G' num2str(GroupNum) '.csv' ];
+end
 
 
 % title of the BL plot.
-Title = [ 'Velocity vs Y-probe profile for Group: ' num2str(GroupNum) ' Section ' num2str(SectionNum) ] ;
+Title = [ 'Velocity vs Y-probe Location for Group: ' num2str(GroupNum) ', Section: ' num2str(SectionNum) ] ;
 
 
 %% read the files/ call the reading fucntion : VV
@@ -170,9 +167,9 @@ refline(0,feval(Function,VelocAtBL));
 legend( 'Data points', 'Excluded Local V_\infty', 'Best Fit Line','95% Of Local V_\infty ', 'Corresponding BL thickness','Location', 'NorthWest' );
 hold off
 
-BLThickness = feval(Function,VelocAtBL)
+BLThickness = feval(Function,VelocAtBL);
 RisdualSum = getfield(ErrorStruct,'sse'); % Risdual sum
-ErrorInBLThickness = sqrt(1/9) * RisdualSum  % sqrt of 1/N-2
+ErrorInBLThickness = sqrt(1/9) * RisdualSum;  % sqrt of 1/N-2
 
 %% printout the results:
 
@@ -185,3 +182,10 @@ Veloc_Venturi = { Velc_Venturi(1) ; Velc_Venturi(2) ; Velc_Venturi(3) ; Velc_Ven
 Results = table(Voltage,Veloc_Pitot,Error_Pitot,Veloc_Venturi,Error_Vento)
 
 %% Boundary Layer:
+
+fprintf('Boundary Layer  thickness is: %f ', BLThickness)
+fprintf( char(177) )
+fprintf( ' %f ', ErrorInBLThickness ) 
+fprintf( 'mm \n' );
+
+end

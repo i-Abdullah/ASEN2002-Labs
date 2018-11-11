@@ -73,8 +73,8 @@ end
 
 %read
 
-data_VV = csvread(filename_VV,1,0);
-data_BL = csvread(filename_BL,1,0);
+data_VV = csvread(['Data/' filename_VV],1,0);
+data_BL = csvread(['Data/' filename_BL],1,0);
 
 % divide, and conquer.
 
