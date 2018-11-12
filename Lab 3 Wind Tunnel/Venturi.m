@@ -87,7 +87,7 @@ end
 
 
 syms Pdiff P T
-Velocity(Pdiff, P, T) = sqrt ( (2 * Pdiff * Rfluid * T) / ( (P) * (1-(AreaRatio)^2) ) ) ; 
+Velocity(Pdiff, P, T) = sqrt ( (2 * abs(Pdiff) * Rfluid * T) / ( (P) * (1-(AreaRatio)^2) ) ) ; 
 
 %pre-define this matrix in case there's more than one Pressure or Temp
 %measurments. 

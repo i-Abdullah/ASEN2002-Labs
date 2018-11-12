@@ -27,7 +27,7 @@ RAir = 287.0 ; % pa / m^3 k
 SigmaTemp = 0.25 ; % in k
 SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document
 SigmaDiffPressure = 6894.76 * (1/100); %from lab document
-SigmaManometer = 0.1 ; % in inch
+SigmaManometer = 0.1*248 ; % in inch
 AreaRatio = 1/9.5 ;
 
 
@@ -36,7 +36,7 @@ AreaRatio = 1/9.5 ;
 %248 to convert to Pascal from inches of water.
 
 ManoReadings = [ 0.05 ; 0.42 ; 1.5 ; 2.9 ; 4.9 ] .* 248;
-%ManoReadings = [ 0.01 ; 0.25 ; 1.15 ; 2.54 ; 4.4 ] .* 248;
+ManoReadings = [ 0.01 ; 0.25 ; 1.15 ; 2.54 ; 4.4 ] .* 248;
 
 ManoUncert = [ 0.01 ; 0.05 ; 0.05 ; 0.05 ; 0.05 ] .* 248 ;
 
@@ -148,7 +148,7 @@ sigma_Manometer = ones(1,length(Patm_MeanValues_VV)) * SigmaManometer;
 %% calculate Velocity
 
 
-[ Velc_Venturi Error_Venturi ] = Venturi (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,RAir,AreaRatio);
+[ Velc_Venturi Error_Venturi ] = Venturi (Patm_MeanValues_VV, atmTemp_MeanValues_VV, ManoReadings, sigma_P_atm, sigma_T_atm, sigma_Air_P_Diff,RAir,AreaRatio);
 [ Velc_Pitot Error_Pitot ] = Pitot (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm, sigma_Manometer,RAir);
 
 
@@ -170,6 +170,29 @@ hold off
 BLThickness = feval(Function,VelocAtBL);
 RisdualSum = getfield(ErrorStruct,'sse'); % Risdual sum
 ErrorInBLThickness = sqrt(1/9) * RisdualSum;  % sqrt of 1/N-2
+
+
+
+figure(2)
+hold on
+errorbar([str2num(cell2mat(VV_Files{6,2}{:,1}))], Velc_Venturi, Error_Venturi)
+errorbar([str2num(cell2mat(VV_Files{6,2}{:,1}))], Velc_Pitot, Error_Pitot)
+legend('Venturi Tube', 'Pitot-Static Probe')
+title('Airspeed Measurements for Venturi Tube and Pitot-Static Probe')
+xlabel('Voltage (Volts)')
+ylabel('Velocity m/s')
+grid minor
+ 
+ % Use a linear fit to create a model for airspeed at a given voltage
+ 
+x = [Velc_Venturi'];
+b = [1,1;1,3;1,5;1,7;1,9];
+m = b\x; % slope and y-intercept for linear model
+voltagevec = 1:0.1:9;
+plot(voltagevec,m(2)*voltagevec+m(1))
+legend('Venturi Tube', 'Pitot-Static Probe', 'Linear Fit Model')
+hold off
+
 
 %% printout the results:
 
