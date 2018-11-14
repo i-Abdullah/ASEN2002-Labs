@@ -278,6 +278,53 @@ end
 
 %% get the BL information
 
+%we will need to know where (what row of the file) the data switches
+%location, and in total there's 12 locations where the data will switch,
+%where the y-probe will move, so we will look @ column #6.
+
+%{
+
+ChangeIndi = {} ; %change index array
+j = 1;
+for i = 2:length(Eld_y_BL);
+    
+    if abs(abs(Eld_y_BL(i))-abs(Eld_y_BL(i-1))) > 0.01
+    ChangeIndi{j} = i;
+    j = j+1;
+    
+    end
+
+end
+
+ChangeIndi = [ 1 , cell2mat(ChangeIndi) ];
+
+BL_YprobeLocation = {}; %location of the y-probe, note that the last on is free-stream condition
+BL_SigmaYprobeLocation = {}; %uncertainty in that location via std note that the last on is free-stream condition
+BL_Velocity = {} ; %Velocity at each y-probe location, and note that the last on is free-stream condition
+
+for i = 1:12
+    
+    if i==12
+        
+BL_YprobeLocation{i,1} = mean(Eld_y_BL(ChangeIndi(i):end));
+BL_SigmaYprobeLocation{i,1} = std(Eld_y_BL((ChangeIndi(i):end)));
+BL_Velocity{i,1} = sqrt(( 2 * mean(Aux_diff_P_BL((ChangeIndi(i):end)) * RAir * mean(atm_Temp_BL( ( ChangeIndi(i):end) )) / (mean(atm_P_BL(ChangeIndi(i):end))))));
+
+
+    else
+BL_YprobeLocation{i,1} = mean(Eld_y_BL(ChangeIndi(i):ChangeIndi(i+1)));
+BL_SigmaYprobeLocation{i,1} = std(Eld_y_BL((ChangeIndi(i):ChangeIndi(i+1))));
+BL_Velocity{i,1} = sqrt(( 2 * mean(Aux_diff_P_BL((ChangeIndi(i):ChangeIndi(i+1))) * RAir * mean(atm_Temp_BL( ( ChangeIndi(i):ChangeIndi(i+1)) )) / ( mean(atm_P_BL(ChangeIndi(i):ChangeIndi(i+1)))))));
+
+    end
+
+
+end
+
+%}
+
+%another way that is not atonomus :
+
 % the data are parsed at every 500, each one of these will be [ 3 x 12 ]
 
 % 12 : 12 different voltages and the center is the 12th.
@@ -297,6 +344,7 @@ BL_SigmaYprobeLocation{i,1} = std(Eld_y_BL(i*500-499:i*500));
 BL_Velocity{i,1} = sqrt(( 2 * mean(Aux_diff_P_BL(i*500-499:i*500)) * RAir * mean(atm_Temp_BL(i*500-499:i*500)) ) / ( mean(atm_P_BL((i*500-499:i*500)) )));
 
 end
+
 
 
 %% store VV values

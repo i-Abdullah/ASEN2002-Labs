@@ -1,6 +1,11 @@
-function [ Results, BLThickness, ErrorInBLThickness ] = Lab3(SectionNum,GroupNum)
+function [ Results, BLThickness, ErrorInBLThickness ] = Lab3Modified(SectionNum,GroupNum)
 %% info
 %{
+THIS'S MODIFIED FUNCTION FROM THE ORIGINAL FUNCTION Lab3.m, this's because
+there was error in other groups VV files and we only need BL to calclulate
+BL Thickness, and thus this function will skip the part of doing the
+speeds.
+
 
 Thie function will extract and analyze data obtained from a wind tunnel lab,
 part of ASEN 2002: Lab 3, CU Boulder, Fall 18. It is designed to read csv
@@ -160,12 +165,12 @@ sigma_Air_P_Diff = ones(1,length(Air_P_diff_MeanValues_VV)) * SigmaDiffPressure 
 sigma_P_atm = ones(1,length(Patm_MeanValues_VV)) * SigmaatmPressure ;
 sigma_Manometer = ones(1,length(Patm_MeanValues_VV)) * SigmaManometer;
 
-%% calculate Velocity
-
+%% calculate Velocity: omitted, read description
+%{
 
 [ Velc_Venturi Error_Venturi ] = Venturi (Patm_MeanValues_VV, atmTemp_MeanValues_VV, ManoReadings, sigma_P_atm, sigma_T_atm, sigma_Manometer,RAir,AreaRatio);
 [ Velc_Pitot Error_Pitot ] = Pitot (Patm_MeanValues_VV, atmTemp_MeanValues_VV, Air_P_diff_MeanValues_VV, sigma_P_atm, sigma_T_atm,sigma_Air_P_Diff,RAir);
-
+%}
 
 %% Boundary Layer thickness
 
@@ -186,7 +191,7 @@ BLThickness = feval(Function,VelocAtBL);
 RisdualSum = getfield(ErrorStruct,'sse'); % Risdual sum
 ErrorInBLThickness = sqrt(1/9) * RisdualSum;  % sqrt of 1/N-2
 
-
+%{
 
 figure(2)
 hold on
@@ -207,17 +212,17 @@ voltagevec = 1:0.1:9;
 plot(voltagevec,m(2)*voltagevec+m(1))
 legend('Venturi Tube', 'Pitot-Static Probe', 'Linear Fit Model')
 hold off
-
+%}
 
 %% printout the results:
-
+%{
 Voltage = VV_Files{6,2}{:,1};
 Error_Vento = { Error_Venturi(1) ; Error_Venturi(2) ; Error_Venturi(3) ; Error_Venturi(4) ; Error_Venturi(5) };
 Veloc_Pitot = { Velc_Pitot(1) ; Velc_Pitot(2) ; Velc_Pitot(3) ; Velc_Pitot(4) ; Velc_Pitot(5) };
 Error_Pitot = { Error_Pitot(1) ; Error_Pitot(2) ; Error_Pitot(3) ; Error_Pitot(4) ; Error_Pitot(5) };
 Veloc_Venturi = { Velc_Venturi(1) ; Velc_Venturi(2) ; Velc_Venturi(3) ; Velc_Venturi(4) ; Velc_Venturi(5) };
-
-Results = table(Voltage,Veloc_Pitot,Error_Pitot,Veloc_Venturi,Error_Vento);
+%}
+Results = 0;
 
 %% Boundary Layer:
 
