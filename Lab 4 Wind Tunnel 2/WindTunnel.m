@@ -41,6 +41,31 @@ stingNormForce = Data(:,24);
 stingAxialForce = Data(:,25);
 stingPitchingMoment = Data(:,26);
 
+%% Geometry of airfoil
+
+AirfoilGeometry = xlsread('Data/AirfoilGeometry.xlsx',1);
+PortsAndConnection = xlsread('Data/AirfoilGeometry.xlsx',2);
+CordLength = 3.5;
+
+x_c = PortsAndConnection(:,2)/CordLength;
+
+%Calculate ports mean values for pressure @ airfoil
+for i=1:1:9
+    %each column represent 1 air speed per angle of attack
+PortsMeanValues(:,i) = mean(Data ( ((i*20-19):(i*20)),(7:22) ),1);
+end
+
+
+%calculate free-stream velocity:
+
+R = 287;
+
+for i=1:1:9
+Density(1,i) = ( mean (Data((i*20-19):i*20),(1))) / (mean( Data( (i*20-19):i*20 ),(2))*R);
+end
+
+a = 1;
+
 %% Extrapolate pressure:
 
 %Explain:
@@ -67,7 +92,7 @@ SP14_location = 2.1; %in m
 
 Ptrail = 0;
 
-LocTrail = 3.5; %where the trail is in meters.
+LocationTrail = 3.5; %where the trail is in meters.
 
 %each two conscutive ports on the same height will be in the same loop.
 %so 10 and 8 together, and 12 and 14 together.
@@ -77,21 +102,30 @@ for i=1:1:9
 y = [ mean(SP8((i*20-19):i*20)); mean(SP10((i*20-19):i*20)) ];
 t = [ SP8_location; SP10_location ];
 
-%calculate the new pressure at the trailing edge.
+Slope = (y(2)-y(1))/(t(2)-t(1));
+Intercept = y(1) - Slope*t(1) ;
 
-Ptrail_UpperPorts(i) = Slope*(LocTrail) + Intercept;
-Uncertinity_Ptrail_Upper(i) = sqrt( [ LocTrail 1] * Q * [ LocTrail ; 1 ] );
+Ptrail_UpperPorts(i) = Slope*(LocationTrail) + Intercept;
+%Uncertinity_Ptrail_Upper(i) = sqrt( [ LocationTrail 1] * Q * [ LocationTrail ; 1 ] );
 
 end
 
 for i=1:1:9
 y = [ mean(SP12((i*20-19):i*20)); mean(SP14((i*20-19):i*20)) ];
 t = [ SP12_location; SP14_location ];
-[ Slope Intercept SigY SigB SigM Q ] = LSM(t,y)
 
 %calculate the new pressure at the trailing edge.
 
-Ptrail_LowerPorts(i) = Slope*(LocTrail) + Intercept;
-Uncertinity_Ptrail_Lower(i) = sqrt( [ LocTrail 1] * Q * [ LocTrail ; 1 ] );
+Ptrail_LowerPorts(i) = Slope*(LocationTrail) + Intercept;
+%Uncertinity_Ptrail_Lower(i) = sqrt( [ LocationTrail 1] * Q * [ LocationTrail ; 1 ] );
+
+Slope = (y(2)-y(1))/(t(2)-t(1));
+Intercept = y(1) - Slope*t(1) ;
+
+Ptrail_LowerPorts(i) = Slope*(LocationTrail) + Intercept;
 
 end
+
+%% Pressure coefficient with respect to x/C (location port/cord length)
+
+Cordlength = 3.5; % in inches
