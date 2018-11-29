@@ -61,9 +61,14 @@ end
 R = 287;
 
 for i=1:1:9
-Density(1,i) = ( mean (Data((i*20-19):i*20),(1))) / (mean( Data( (i*20-19):i*20 ),(2))*R);
+%Density(i) = (mean(Data((i*20-19):(i*20),1))) / (( mean(Data((i*20-19):(i*20),2))) *R);
+
+Vinfinty(i) =  (mean(Data((i*20-19):(i*20),1))
 end
 
+% P infinity is free stream
+% pitot give u q infinty
+% at each port your data point or mean pressures is the p
 a = 1;
 
 %% Extrapolate pressure:
