@@ -30,14 +30,16 @@ SP5 = Data(:,11);
 SP6 = Data(:,12);
 SP7 = Data(:,13);
 SP8 = Data(:,14);
-SP9 = Data(:,15); % not connected
+SP9 = Data(:,15);
 SP10 = Data(:,16);
-SP11 = Data(:,17); % not connected
+SP11 = Data(:,17); 
 SP12 = Data(:,18);
-SP13 = Data(:,19); % not connected
+SP13 = Data(:,19);
 SP14 = Data(:,20);
-SP15 = Data(:,21); % not connected
+SP15 = Data(:,21);
 SP16 = Data(:,22);
+
+SP_All = Data(:,(7:22));
 
 angleOfAttack = Data(:,23);
 stingNormForce = Data(:,24);
@@ -45,7 +47,97 @@ stingAxialForce = Data(:,25);
 stingPitchingMoment = Data(:,26);
 
 
+%% Extrapolate pressure:
 
+%Explain:
+
+%{
+To do this we can extrapolate the pressure at the trailing edge (x = 3.5in)
+based upon  pressure measured at the last two ports on both the upper and
+lower wing surfaces (upper: p10, p8 and lower: p12, p14. These linear
+extrapolations will give us two  different  estimates for the pressure
+at the trailing edge, but we know that the pressures from the upper and
+lower surfaces must converge at the trailing edge. Thus we should average
+these  two pressure estimates to provide one estimate at the trailing  edge. 
+%}
+
+%Take Mean Values and linearly extrapolate.
+%each angel of attack has 3 speeds
+
+SP8_location = 2.1; %in m
+SP10_location = 2.8; %in m
+SP12_location = 2.8; %in m
+SP14_location = 2.1; %in m
+
+Ptrail = 0;
+
+LocationTrail = 3.5; %where the trail is in meters.
+
+%each two conscutive ports on the same height will be in the same loop.
+%so 10 and 8 together, and 12 and 14 together.
+
+% SP 8 AND SP 10
+for i=1:1:12
+y = [ mean(SP8((i*20-19):i*20)); mean(SP10((i*20-19):i*20)) ];
+t = [ SP8_location; SP10_location ];
+
+Slope = (y(2)-y(1))/(t(2)-t(1));
+Intercept = y(1) - Slope*t(1) ;
+
+Ptrail_UpperPorts(i) = Slope*(LocationTrail) + Intercept;
+%Uncertinity_Ptrail_Upper(i) = sqrt( [ LocationTrail 1] * Q * [ LocationTrail ; 1 ] );
+
+end
+
+for i=1:1:12
+y = [ mean(SP12((i*20-19):i*20)); mean(SP14((i*20-19):i*20)) ];
+t = [ SP12_location; SP14_location ];
+
+%calculate the new pressure at the trailing edge.
+
+Ptrail_LowerPorts(i) = Slope*(LocationTrail) + Intercept;
+%Uncertinity_Ptrail_Lower(i) = sqrt( [ LocationTrail 1] * Q * [ LocationTrail ; 1 ] );
+
+Slope = (y(2)-y(1))/(t(2)-t(1));
+Intercept = y(1) - Slope*t(1) ;
+
+Ptrail_LowerPorts(i) = Slope*(LocationTrail) + Intercept;
+
+end
+
+PTrail = mean( [ Ptrail_LowerPorts ; Ptrail_LowerPorts ] );
+
+
+%get mean data for all ports for all angel of attacks all speeds, each
+%column should have 12 rows
+
+for i=1:1:12
+
+PortsMeans(i,:) = mean(Data ( ((i*20-19):(i*20)),(7:22) ),1);
+
+end
+
+
+%Loop To re-create the SP Values after getting the last port:
+
+[ r c ] = size(PortsMeans);
+
+SP_All_Updated = zeros(r,c+1);
+for i = 1:c+1
+    if i==10
+        SP_All_Updated(:,i) = PTrail;
+    elseif i<10
+    SP_All_Updated(:,i) = PortsMeans(:,i);
+    
+    else %after the 10 is added, the index will exceed the matrix deminsions
+    
+     SP_All_Updated(:,i) = PortsMeans(:,i-1);
+
+    end
+    
+end
+
+a=1;
 %% Geometry of airfoil
 
 AirfoilGeometry = xlsread('Data/AirfoilGeometry.xlsx',1);
@@ -56,7 +148,7 @@ x_c = PortsAndConnection(:,2)/CordLength;
 
 %exclude not used ports:
 x_c(9)= [];
-x_c(11)= [];
+%x_c(11)= [];
 x_c(13)= [];
 x_c(15)= [];
 
@@ -100,7 +192,7 @@ Qinfity = Dynamic pressure from pitot tube (@ column 5)
 %}
 for i=1:1:12
     
-  Cp(:,i) = (PortsMeanValues(:,i) - Pinf(:,i))./(qinf(:,i));
+  Cp(:,i) = (SP_All_Updated(i,:)' - Pinf(:,i))./(qinf(:,i));
 
 end
 
