@@ -9,7 +9,15 @@ close all;
 Section = 11;
 Group = 15;
 
-filename = [ 'AirfoilPressure_S011_G15.csv'] ;
+
+if Group <= 9
+    filename = ['AirfoilPressure_S0' num2str(Section) '_G0' num2str(Group) '.csv' ];
+else
+    filename = ['AirfoilPressure_S0' num2str(Section) '_G' num2str(Group) '.csv' ];
+end
+
+
+%filename = [ 'AirfoilPressure_S011_G15.csv'] ;
 Data = csvread(['Data/' filename ],1,0);
 
 % naming
@@ -196,6 +204,45 @@ for i=1:1:12
 
 end
 
+
+%% Lift and Drag
+
+PortsExlusion = PortsAndConnection(:,:);
+
+
+PortsExlusion(9,:) = [];
+PortsExlusion(13,:) = [];
+PortsExlusion(15,:) = [];
+
+dx=zeros(length(PortsExlusion),1);
+dy=zeros(length(PortsExlusion),1);
+
+for i = 1:length(PortsExlusion)-1 %calculate the delta x and delta y values 
+    dx(i) = PortsExlusion(i+1,2)-PortsExlusion(i,2);
+    dy(i) = PortsExlusion(i+1,3)-PortsExlusion(i,3);
+end
+
+
+
+[ r c ] = size(Cp);
+for j=1:c
+    for i=1:r-1
+        
+    Cn(i,j) = 0.5*(Cp(i,j) + Cp(i+1,j))* (dx(i)/CordLength) ;
+    Ca(i,j) = 0.5*(Cp(i,j) + Cp(i+1,j))* (dy(i)/CordLength) ;
+    
+    end
+end
+
+%sum all values
+Cn = -sum(Cn,1);
+Ca = sum(Ca,1);
+
+%coefficient of lift and drag
+Cl = (Cn .* cosd(Alpha_V(1,:))) - (Ca .* sind(Alpha_V(1,:))) ;
+Cd = (Ca .* cosd(Alpha_V(1,:))) + (Cn .* sind(Alpha_V(1,:))) ;
+
+
 %% plotting cp with respect to x_c
 
 
@@ -214,7 +261,12 @@ title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
 xlabel( ' x/c ')
 ylabel ('Cp')
 
+set(gca, 'YDir','reverse')
+
+
 hold off;
+
+
 
 end
 
@@ -233,6 +285,8 @@ grid minor
 title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
 xlabel( ' x/c ')
 ylabel ('Cp')
+
+set(gca, 'YDir','reverse')
 
 hold off;
 
@@ -255,6 +309,8 @@ title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
 xlabel( ' x/c ')
 ylabel ('Cp')
 
+set(gca, 'YDir','reverse')
+
 hold off;
 
 end
@@ -275,8 +331,16 @@ title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
 xlabel( ' x/c ')
 ylabel ('Cp')
 
+set(gca, 'YDir','reverse')
+
 hold off;
 
 end
 
-a = 1;
+%% plot alpha vs cl/cd (same like L/D;
+
+figure(5);
+
+scatter(Alpha_V(1,:),(Cl./Cd))
+grid minor
+title(['\alpha Vs L/D']);
