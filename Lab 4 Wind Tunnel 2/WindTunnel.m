@@ -6,7 +6,10 @@ close all;
 
 %% Read Data:
 
-filename = 'sample_set_2018.csv';
+Section = 11;
+Group = 15;
+
+filename = [ 'AirfoilPressure_S011_G15.csv'] ;
 Data = csvread(['Data/' filename ],1,0);
 
 % naming
@@ -49,28 +52,140 @@ CordLength = 3.5;
 
 x_c = PortsAndConnection(:,2)/CordLength;
 
+%exclude not used ports:
+x_c(9)= [];
+x_c(11)= [];
+x_c(13)= [];
+x_c(15)= [];
+
+
 %Calculate ports mean values for pressure @ airfoil
-for i=1:1:9
-    %each column represent 1 air speed per angle of attack
+for i=1:1:12
+    
+ %each column represent 1 air speed per angle of attack
+ 
+ % thus each row is one port, we have 16 ports, thus 16 raws
+ % 4 angel of attacks *  3 speeds, thus 12 columns.
+ 
+ 
 PortsMeanValues(:,i) = mean(Data ( ((i*20-19):(i*20)),(7:22) ),1);
+
+% Angel of attack related to each set of columns
+% this will b 2 rows * N columns, the first row is angel of attack, second
+% is air speed. 
+
+Alpha_V(:,i) = [ mean(Data ( ((i*20-19):(i*20)),(23) ),1) ; mean(Data ( ((i*20-19):(i*20)),(4) ),1) ];
+
+
+% get qinfinity and Pinf, descreption below.
+
+Pinf(:,i) = mean(Data ( ((i*20-19):(i*20)),(6) ),1);
+qinf(:,i) = mean(Data ( ((i*20-19):(i*20)),(5) ),1);
+
+
 end
 
-
-%calculate free-stream velocity:
-
-R = 287;
-
-for i=1:1:9
-%Density(i) = (mean(Data((i*20-19):(i*20),1))) / (( mean(Data((i*20-19):(i*20),2))) *R);
-
-Vinfinty(i) =  (mean(Data((i*20-19):(i*20),1))
-end
-
-% P infinity is free stream
-% pitot give u q infinty
-% at each port your data point or mean pressures is the p
 a = 1;
+%Now we can calculate Cp (Coefficient of pressure)
 
+%{
+
+Cp = (P - Pinf)/(qinf);
+P = PortsMeanValues;
+Pinf = Air pressure transducer 6
+Qinfity = Dynamic pressure from pitot tube (@ column 5)
+
+%}
+for i=1:1:12
+    
+  Cp(:,i) = (PortsMeanValues(:,i) - Pinf(:,i))./(qinf(:,i));
+
+end
+
+%% plotting cp with respect to x_c
+
+
+%plot the first set
+for i=1:3
+figure(1)
+subplot(3,1,i)
+plot(x_c(:,1),Cp(:,i),'*')
+hold on
+plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
+patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
+alpha(0.1); %change transperancy of  the filling
+
+grid minor
+title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
+xlabel( ' x/c ')
+ylabel ('Cp')
+
+hold off;
+
+end
+
+% the second portion
+
+for i=4:6
+figure(2)
+subplot(3,1,i-3)
+plot(x_c(:,1),Cp(:,i),'*')
+hold on
+plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
+patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
+alpha(0.1); %change transperancy of  the filling
+
+grid minor
+title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
+xlabel( ' x/c ')
+ylabel ('Cp')
+
+hold off;
+
+end
+
+
+%the third portion
+
+for i=7:9
+figure(3)
+subplot(3,1,i-6)
+plot(x_c(:,1),Cp(:,i),'*')
+hold on
+plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
+patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
+alpha(0.1); %change transperancy of  the filling
+
+grid minor
+title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
+xlabel( ' x/c ')
+ylabel ('Cp')
+
+hold off;
+
+end
+
+%forth portion
+
+for i=10:12
+figure(4)
+subplot(3,1,i-9)
+plot(x_c(:,1),Cp(:,i),'*')
+hold on
+plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
+patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
+alpha(0.1); %change transperancy of  the filling
+
+grid minor
+title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
+xlabel( ' x/c ')
+ylabel ('Cp')
+
+hold off;
+
+end
+
+a = 1;
 %% Extrapolate pressure:
 
 %Explain:
@@ -131,6 +246,4 @@ Ptrail_LowerPorts(i) = Slope*(LocationTrail) + Intercept;
 
 end
 
-%% Pressure coefficient with respect to x/C (location port/cord length)
 
-Cordlength = 3.5; % in inches
