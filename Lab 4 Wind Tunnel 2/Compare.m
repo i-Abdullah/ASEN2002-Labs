@@ -244,7 +244,7 @@ Qinfity = Dynamic pressure from pitot tube (@ column 5)
 %}
 for i=1:1:12
     
-  Cp(:,i) = (SP_All_Updated(i,:)' - Pinf(:,i))./(qinf(:,i));
+  Cp(:,i) = (SP_All_Updated(i,:)')./(qinf(:,i));
 
 end
 
