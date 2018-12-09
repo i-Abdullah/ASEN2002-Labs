@@ -1,43 +1,65 @@
-%% info
-%{ 
+function [Cd,Cl,alpha]=Compare(Section,Group)
+% This function is a the exact same script WindTunnel.m but turned into
+% a function that runs by the group and section number, to analyze a .csv
+% file that is obtained from CU Wind Tunnel experiments. 
+%
+% ------------------------ (INPUTS) --------------
+%
+%       1- Section Number: Between 11 and 14) 
+%
+%       2- Group Number: Odd numbers, starting from 1, ending at
+%       15 for each section
+%
+% ------------------------ (OUTPUTS) --------------
+%
+%       1- Cd: coefficient of drag, an array that has the size of 1x(n*k)
+%              where n is the number of angel of attacks and k is the
+%              number of speeds tested, thus in our case here it is 1x12,
+%              where say for instance we have three angel of attacks and 4
+%              different speeds, the first three elments are for the first
+%              speed, the second three are for the third, and so on.
+%
+%
+%       2- Cl: coefficient of lift, an array that has the size of 1x(n*k)
+%              where n is the number of angel of attacks and k is the
+%              number of speeds tested, thus in our case here it is 1x12,
+%              where say for instance we have three angel of attacks and 4
+%              different speeds, the first three elments are for the first
+%              speed, the second three are for the third, and so on.
+%
+%       3- alpha: angel of attack, it will also have the same sizing, and
+%       thus in this case the first three elements will represnt the first
+%       the same angel of attack because the only thing that changes is
+%       speed, and so on.
+%
+%
+% ------------------- ( Done By )------------------
+%           1- Sam D'Souza
+%           2- Trevor Slack
+%           3- Foster Greer
+%           4 - Nathan Portman
+%           5 - Abdulla Alameri
 
-This script is meant to analyze the data obtained from CU-Boulder ITLL Wind
-Tunnel for a Clark Y airfoil, and run aerodynamic analysis. Part of Fall 18
-ASEN 2002 Labs
-
-Done By:
-
-1- Sam D'Souza
-2- Trevor Slack
-3- Foster Greer
-4 - Nathan Portman
-5 - Abdulla Alameri
-
-
-% This codes will read .csv file, and plot coefficient of drag for profile
-drag and compare it with x/c (location/cord length) and also calculate
-coefficients of friciton as well as some of the 
-
-%}
-
-
-
-%% housekeeping
-
-clear;
-clc;
-close all;
 
 %% Read Data:
-
-Section = 11;
-Group = 15;
 
 
 if Group <= 9
     filename = ['AirfoilPressure_S0' num2str(Section) '_G0' num2str(Group) '.csv' ];
+    if isfile(['Data/' filename ]) ~= 1
+        Cd=0;
+        Cl=0;
+        alpha=0;
+        return
+    end
 else
     filename = ['AirfoilPressure_S0' num2str(Section) '_G' num2str(Group) '.csv' ];
+    if isfile(['Data/' filename ]) ~= 1
+        Cd=0;
+        Cl=0;
+        alpha=0;
+        return
+    end
 end
 
 
@@ -215,12 +237,10 @@ a = 1;
 %Now we can calculate Cp (Coefficient of pressure)
 
 %{
-
 Cp = (P - Pinf)/(qinf);
 P = PortsMeanValues;
 Pinf = Air pressure transducer 6
 Qinfity = Dynamic pressure from pitot tube (@ column 5)
-
 %}
 for i=1:1:12
     
@@ -267,104 +287,7 @@ Cl = (Cn .* cosd(Alpha_V(1,:))) - (Ca .* sind(Alpha_V(1,:))) ;
 Cd = (Ca .* cosd(Alpha_V(1,:))) + (Cn .* sind(Alpha_V(1,:))) ;
 
 
-%% plotting cp with respect to x_c
+%% store Alpha values.
 
-
-%plot the first set
-for i=1:3
-figure(1)
-subplot(3,1,i)
-plot(x_c(:,1),Cp(:,i),'*')
-hold on
-plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
-patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
-alpha(0.1); %change transperancy of  the filling
-
-grid minor
-title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
-xlabel( ' x/c ')
-ylabel ('Cp')
-
-set(gca, 'YDir','reverse')
-
-
-hold off;
-
-
-
+alpha=Alpha_V(1,:);
 end
-
-% the second portion
-
-for i=4:6
-figure(2)
-subplot(3,1,i-3)
-plot(x_c(:,1),Cp(:,i),'*')
-hold on
-plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
-patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
-alpha(0.1); %change transperancy of  the filling
-
-grid minor
-title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
-xlabel( ' x/c ')
-ylabel ('Cp')
-
-set(gca, 'YDir','reverse')
-
-hold off;
-
-end
-
-
-%the third portion
-
-for i=7:9
-figure(3)
-subplot(3,1,i-6)
-plot(x_c(:,1),Cp(:,i),'*')
-hold on
-plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
-patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
-alpha(0.1); %change transperancy of  the filling
-
-grid minor
-title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
-xlabel( ' x/c ')
-ylabel ('Cp')
-
-set(gca, 'YDir','reverse')
-
-hold off;
-
-end
-
-%forth portion
-
-for i=10:12
-figure(4)
-subplot(3,1,i-9)
-plot(x_c(:,1),Cp(:,i),'*')
-hold on
-plot(x_c(:,1),zeros(1,length(Cp(:,i))),'k')
-patch([x_c(:,1), fliplr(x_c(:,1))], [Cp(:,i) fliplr(Cp(:,i))], [0.9290, 0.6940, 0.1250], 'FaceAlpha',0.8)
-alpha(0.1); %change transperancy of  the filling
-
-grid minor
-title(['\alpha = ' num2str(Alpha_V(1,i)) ', V = ' num2str(Alpha_V(2,i))]);
-xlabel( ' x/c ')
-ylabel ('Cp')
-
-set(gca, 'YDir','reverse')
-
-hold off;
-
-end
-
-%% plot alpha vs cl/cd (same like L/D;
-
-figure(5);
-
-scatter(Alpha_V(1,:),(Cl./Cd))
-grid minor
-title(['\alpha Vs L/D']);
