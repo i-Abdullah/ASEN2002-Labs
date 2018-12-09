@@ -368,3 +368,5 @@ figure(5);
 scatter(Alpha_V(1,:),(Cl./Cd))
 grid minor
 title(['\alpha Vs L/D']);
+
+%% error analysis
