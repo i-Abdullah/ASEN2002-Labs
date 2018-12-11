@@ -105,6 +105,22 @@ end
 
     % loop to find error.
     
+% if there's constant uncertinity values, create a matrix with their
+% size
+    
+
+if length(sigma_Air_P_Diff) == 1 && length(sigma_T_atm)==1 && length(sigma_P_atm) == 1
+    sigma_Air_P_Diff = ones(1,length(P_atm)) .* sigma_Air_P_Diff;
+    sigma_T_atm = ones(1,length(P_atm)) .* sigma_Air_P_Diff;
+    sigma_P_atm = ones(1,length(P_atm)) .* sigma_Air_P_Diff;
+
+else
+    
+    sigma_Air_P_Diff = sigma_Air_P_Diff;
+    sigma_T_atm = sigma_T_atm;
+    sigma_P_atm = sigma_P_atm;
+    
+end
 for i = 1:length(P_atm)
 
     Error(i) = (double(PartialDiffP(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_Air_P_Diff(i))^2 + ((double(PartialPatm(AirP_Diff(i),P_atm(i),T_atm(i))))*sigma_P_atm(i))^2 + ((double(PartialT(AirP_Diff(i),P_atm(i),T_atm(i)))*sigma_T_atm(i)))^2 ;

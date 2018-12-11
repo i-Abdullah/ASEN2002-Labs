@@ -146,6 +146,10 @@ PTrail = mean( [ Ptrail_LowerPorts ; Ptrail_LowerPorts ] );
 for i=1:1:12
 
 PortsMeans(i,:) = mean(Data ( ((i*20-19):(i*20)),(7:22) ),1);
+pitotDynamicPMean(i) = mean(pitotDynamicP ( ((i*20-19):(i*20)),1 ),1);
+TatmMean(i) = mean(Patm ( ((i*20-19):(i*20)),1 ),1);
+PatmMean(i) = mean(Tatm ( ((i*20-19):(i*20)),1 ),1);
+
 
 end
 
@@ -372,6 +376,73 @@ scatter(Alpha_V(1,:),(Cl./Cd))
 grid minor
 title(['\alpha Vs L/D']);
 
-%% error analysis
+%% error analysis: Cp
 
+% uncertainties values are the same like the previous lab, check lab report
+% to see how those are done.
+
+
+SigmaTemp = 0.25 ; % in k
+SigmaatmPressure = (250-20)*10^3*(1.5/100); %from lab document
+SigmaDiffPressure = 6894.76 * (1/100); %from lab document
+SgimaScav = 0.20;
+% get error fro v_inifity
+Rfluid = 287;
+
+% Use pitot function
+[ Velocinf Errorinf ] = Pitot (PatmMean, TatmMean, pitotDynamicPMean, SigmaatmPressure, SigmaTemp, SigmaDiffPressure,Rfluid);
+
+
+
+% now get the error for Cp:
+
+
+syms Pscav Patmo Tatmo V_freeStream
+
+Cp_error_eqn(Pscav,Patmo,Tatmo,V_freeStream) = Pscav / ((0.5)*(Patmo/(Rfluid*Tatmo))*(V_freeStream));
+
+% get partial derivatives
+
+Cp_Partial_Pscav = diff(Cp_error_eqn,Pscav);
+Cp_Partial_Patmo = diff(Cp_error_eqn,Patmo);
+Cp_Partial_Tatmo = diff(Cp_error_eqn,Tatmo);
+Cp_Partial_V_freeStream = diff(Cp_error_eqn,V_freeStream);
+
+
+% if there's constant uncertinity values, create a matrix with their
+% size
+    
+
+% if length(SigmaDiffPressure) == 1 && length(SigmaTemp)==1 && length(SigmaatmPressure) == 1
+%     SigmaDiffPressure = ones(1,length(P_atm)) .* SigmaDiffPressure;
+%     SigmaTemp = ones(1,length(P_atm)) .* SigmaDiffPressure;
+%     SigmaatmPressure = ones(1,length(P_atm)) .* SigmaDiffPressure;
+% 
+% else
+%     
+%     SigmaDiffPressure = sigma_Air_P_Diff;
+%     SigmaTemp = SigmaTemp;
+%     SigmaatmPressure = SigmaatmPressure;
+%     
+% end
+
+
+% loop to get all errors: one 
+% this will be loop for each speed/angel of attack once.
+
+[ r c ] = size(Cp);
+for j=1:c
+    for i=1:r-1
+        
+ value_before_root(i,j) = ( ((Cp_Partial_Pscav( SP_All_Updated(j,i) ,PatmMean(j),TatmMean(j),Velocinf(j)))*SgimaScav)^2 ...
+ + ((Cp_Partial_Patmo(SP_All_Updated(j,i),PatmMean(j),TatmMean(j),Velocinf(j)))*SigmaatmPressure)^2 ...
+ +((Cp_Partial_Tatmo(SP_All_Updated(j,i),PatmMean(j),TatmMean(j),Velocinf(j)))*SigmaTemp)^2 ...
+ +((Cp_Partial_V_freeStream(SP_All_Updated(j,i),PatmMean(j),TatmMean(j),Velocinf(j)))*Errorinf(j))^2 ) ;
+ 
+ Erros_Cp(i,j) = double(sqrt(value_before_root(i,j)));
+
+    end
+end
+
+a = 1;
 
