@@ -30,7 +30,7 @@ close all;
 
 %% Read Data:
 
-Section = 11;
+Section = 13;
 Group = 15;
 
 
@@ -477,7 +477,7 @@ scatter(Alpha_V(1,:),(Cl./Cd))
 grid minor
 title(['\alpha Vs L/D']);
 
-a = 1;
+
 %% error analysis: Cp: Not needed.
 
 % uncertainties values are the same like the previous lab, check lab report

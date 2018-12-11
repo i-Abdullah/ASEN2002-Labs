@@ -208,6 +208,7 @@ for j=11:14
         title(['\alpha vs C_L/C_D (Constant Airspeed 34 m/s)']);
     end
 end
+ylim([ -50 100])
 xlabel('\alpha (Degrees)')
 ylabel('(C_L)/(C_D)')
 grid minor

@@ -159,7 +159,7 @@ Ptrail_LowerPorts(i) = Slope*(LocationTrail) + Intercept;
 
 end
 
-PTrail = mean( [ Ptrail_LowerPorts ; Ptrail_LowerPorts ] );
+PTrail = mean( [ Ptrail_LowerPorts ; Ptrail_UpperPorts ] );
 
 
 %get mean data for all ports for all angel of attacks all speeds, each
